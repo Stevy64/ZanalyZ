@@ -72,3 +72,39 @@ class SnapshotRoundtripTests(TestCase):
         # Logos navigateur : URL CDN dérivée de sofascore_id
         from paris.clubs import logo_url_pour
         self.assertIn('sofascore.com', logo_url_pour(m.domicile))
+
+    def test_import_reutilise_equipe_meme_nom_autre_sid(self):
+        """Migration SofaScore → ESPN : même nom, nouvel id, slug différent."""
+        Equipe.objects.create(
+            nom='Arsenal', nom_court='Arsenal', slug='arsenal-old', sofascore_id=999001,
+        )
+        payload = {
+            'version': 1,
+            'competitions': [{
+                'code': 'PL', 'nom': 'Premier League', 'pays': 'Angleterre',
+                'ordre': 20, 'actif': True, 'sofascore_id': 700,
+            }],
+            'equipes': [
+                {'nom': 'Arsenal', 'nom_court': 'Arsenal', 'slug': 'arsenal',
+                 'sofascore_id': 359, 'logo_externe': '', 'fiche_club': {}},
+                {'nom': 'Chelsea', 'nom_court': 'Chelsea', 'slug': 'chelsea',
+                 'sofascore_id': 363, 'logo_externe': '', 'fiche_club': {}},
+            ],
+            'matchs': [{
+                'sofascore_id': 401999001,
+                'competition_code': 'PL',
+                'domicile_slug': 'arsenal',
+                'exterieur_slug': 'chelsea',
+                'coup_denvoi': '2026-09-20T15:00:00+00:00',
+                'statut': 'a_venir',
+                'cotes': [],
+                'analyse': None,
+            }],
+        }
+        stats = importer_snapshot(payload)
+        self.assertEqual(stats['equipes'], 2)
+        self.assertEqual(stats['matchs'], 1)
+        ars = Equipe.objects.get(slug='arsenal')
+        self.assertEqual(ars.nom, 'Arsenal')
+        self.assertEqual(ars.sofascore_id, 359)
+        self.assertFalse(Equipe.objects.filter(nom='Arsenal').exclude(pk=ars.pk).exists())

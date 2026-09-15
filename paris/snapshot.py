@@ -143,6 +143,85 @@ def exporter_snapshot(*, jours: int | None = None, enrichir_clubs: bool = False)
     }
 
 
+def _liberer_equipe_uniques(
+    *,
+    slug: str,
+    nom: str,
+    sid: int | None,
+    thesportsdb_id: int | None,
+    except_pk: int | None,
+) -> None:
+    """Renomme / libère slug, nom, sofascore_id déjà pris par une autre équipe."""
+    autres = Equipe.objects.all()
+    if except_pk:
+        autres = autres.exclude(pk=except_pk)
+
+    other = autres.filter(slug=slug).first()
+    if other:
+        other.slug = f'{other.slug}-old-{other.pk}'[:50]
+        other.save(update_fields=['slug'])
+
+    other = autres.filter(nom=nom).first()
+    if other:
+        other.nom = f'{other.nom} (ancien {other.pk})'[:80]
+        other.save(update_fields=['nom'])
+
+    if sid is not None:
+        other = autres.filter(sofascore_id=sid).first()
+        if other:
+            other.sofascore_id = None
+            other.save(update_fields=['sofascore_id'])
+
+    if thesportsdb_id is not None:
+        other = autres.filter(thesportsdb_id=thesportsdb_id).first()
+        if other:
+            other.thesportsdb_id = None
+            other.save(update_fields=['thesportsdb_id'])
+
+
+def _upsert_equipe(e: dict[str, Any]) -> Equipe:
+    """
+    Upsert robuste : sid ESPN/SofaScore, puis slug, puis nom.
+    Évite IntegrityError quand une ancienne équipe (autre sid) porte déjà le nom.
+    """
+    sid = e.get('sofascore_id')
+    nom = e['nom']
+    slug = e['slug']
+    tsdb = e.get('thesportsdb_id')
+    defaults = {
+        'nom': nom,
+        'nom_court': e.get('nom_court') or nom[:24],
+        'slug': slug,
+        'thesportsdb_id': tsdb,
+        'logo_externe': e.get('logo_externe') or '',
+        'fiche_club': e.get('fiche_club') or {},
+    }
+
+    eq = None
+    if sid:
+        eq = Equipe.objects.filter(sofascore_id=sid).first()
+    if eq is None:
+        eq = Equipe.objects.filter(slug=slug).first()
+    if eq is None:
+        eq = Equipe.objects.filter(nom=nom).first()
+
+    if eq is None:
+        _liberer_equipe_uniques(
+            slug=slug, nom=nom, sid=sid, thesportsdb_id=tsdb, except_pk=None,
+        )
+        return Equipe.objects.create(sofascore_id=sid, **defaults)
+
+    _liberer_equipe_uniques(
+        slug=slug, nom=nom, sid=sid, thesportsdb_id=tsdb, except_pk=eq.pk,
+    )
+    for k, v in defaults.items():
+        setattr(eq, k, v)
+    if sid:
+        eq.sofascore_id = sid
+    eq.save()
+    return eq
+
+
 @transaction.atomic
 def importer_snapshot(data: dict[str, Any]) -> dict[str, int]:
     """Upsert snapshot (compétitions, équipes, matchs, cotes, analyses)."""
@@ -160,6 +239,12 @@ def importer_snapshot(data: dict[str, Any]) -> dict[str, int]:
     }
 
     for c in data.get('competitions') or []:
+        sid = c.get('sofascore_id')
+        if sid:
+            # Libère l’id s’il était sur une autre compétition (SofaScore → ESPN).
+            Competition.objects.filter(sofascore_id=sid).exclude(code=c['code']).update(
+                sofascore_id=None,
+            )
         Competition.objects.update_or_create(
             code=c['code'],
             defaults={
@@ -167,35 +252,13 @@ def importer_snapshot(data: dict[str, Any]) -> dict[str, int]:
                 'pays': c.get('pays') or '',
                 'ordre': c.get('ordre', 100),
                 'actif': c.get('actif', True),
-                'sofascore_id': c.get('sofascore_id'),
+                'sofascore_id': sid,
             },
         )
         stats['competitions'] += 1
 
     for e in data.get('equipes') or []:
-        sid = e.get('sofascore_id')
-        defaults = {
-            'nom': e['nom'],
-            'nom_court': e.get('nom_court') or e['nom'][:24],
-            'slug': e['slug'],
-            'thesportsdb_id': e.get('thesportsdb_id'),
-            'logo_externe': e.get('logo_externe') or '',
-            'fiche_club': e.get('fiche_club') or {},
-        }
-        if sid:
-            eq = Equipe.objects.filter(sofascore_id=sid).first()
-            if eq:
-                for k, v in defaults.items():
-                    setattr(eq, k, v)
-                eq.sofascore_id = sid
-                eq.save()
-            else:
-                Equipe.objects.update_or_create(
-                    slug=e['slug'],
-                    defaults={**defaults, 'sofascore_id': sid},
-                )
-        else:
-            Equipe.objects.update_or_create(slug=e['slug'], defaults=defaults)
+        _upsert_equipe(e)
         stats['equipes'] += 1
 
     for m in data.get('matchs') or []:
