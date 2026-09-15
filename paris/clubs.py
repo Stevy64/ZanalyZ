@@ -9,12 +9,37 @@ from paris.models import Equipe, Match
 
 
 def logo_url_pour(eq: Equipe) -> str:
+    """URL logo navigateur. Préfère le CDN embarqué au snapshot (ESPN)."""
     url = (eq.logo_externe or '').strip()
     if url:
         return url
-    if eq.sofascore_id:
-        return f'https://img.sofascore.com/api/v1/team/{int(eq.sofascore_id)}/image'
     return ''
+
+
+def logo_svg_placeholder(nom: str, nom_court: str = '') -> bytes:
+    """SVG de repli (initiales) si aucun logo externe n’est disponible."""
+    label = (nom_court or nom or '?').strip()
+    parts = label.split()
+    if len(parts) >= 2:
+        initials = (parts[0][0] + parts[1][0]).upper()
+    else:
+        initials = label[:2].upper() or '?'
+    hue = sum(ord(c) for c in (nom or label)) % 360
+    c1 = f'hsl({hue} 42% 38%)'
+    c2 = f'hsl({(hue + 40) % 360} 48% 28%)'
+    safe = (
+        initials.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    )
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="{c1}"/><stop offset="100%" stop-color="{c2}"/>
+  </linearGradient></defs>
+  <path fill="url(#g)" stroke="#fff" stroke-width="2.5"
+    d="M32 4 52 12v18c0 14-8 24-20 28C20 54 12 44 12 30V12Z"/>
+  <text x="32" y="38" text-anchor="middle" fill="#fff" font-size="18"
+    font-family="Segoe UI,Arial,sans-serif" font-weight="700">{safe}</text>
+</svg>'''
+    return svg.encode('utf-8')
 
 
 def infos_equipe_locale(eq: Equipe) -> dict[str, Any]:
@@ -103,9 +128,6 @@ def enrichir_equipe_pour_snapshot(eq: Equipe, *, resoudre_externe: bool = True) 
                     pass
         except Exception:  # noqa: BLE001
             pass
-
-    if not logo and eq.sofascore_id:
-        logo = f'https://img.sofascore.com/api/v1/team/{int(eq.sofascore_id)}/image'
 
     fiche.pop('source', None)
     fiche.pop('badge_url', None)

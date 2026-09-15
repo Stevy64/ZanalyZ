@@ -18,4 +18,4 @@ Voir l’ancien guide détaillé ci-dessous si tu restes sur OCI.
 2. IP publique + Security List 22/80/443.
 3. Puis suivre les mêmes étapes qu’OVH : clone, `.env`, systemd, nginx, certbot, cron.
 
-SofaScore fonctionne (egress libre). En cas d’« Out of capacity », change d’AD / région.
+ESPN / snapshot Engine fonctionnent (egress libre). En cas d’« Out of capacity », change d’AD / région.

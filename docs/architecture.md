@@ -3,9 +3,9 @@
 Deux git :
 
 - **Zanalyze** (ce repo `Zanalyze`) : PWA Django, admin, VIP
-- **[Zanalyze Engine](https://github.com/Stevy64/Zanalyze-Engine)** : SofaScore, modèles v3.1, snapshot v1
+- **[Zanalyze Engine](https://github.com/Stevy64/Zanalyze-Engine)** : ESPN, modèles v3.1, snapshot v1
 
-Sur **PythonAnywhere**, Django n’appelle pas SofaScore (`ZANALYZ_SYNC_LIVE=0`) : il **importe** le JSON produit par l’engine. Voir [engine.md](engine.md).
+Sur **PythonAnywhere**, Django importe le JSON produit par l’engine (`ZANALYZ_SYNC_LIVE=0`). Voir [engine.md](engine.md).
 
 Sur **VPS Docker**, l’app peut rester autonome (`ZANALYZ_SYNC_LIVE=1`) ou importer le même snapshot.
 
@@ -26,7 +26,7 @@ Sur **VPS Docker**, l’app peut rester autonome (`ZANALYZ_SYNC_LIVE=1`) ou impo
 
         ┌──────────────────────────────────────┐
         │ worker (~2 h)                        │
-        │  SYNC_LIVE=1 : SofaScore + calculer  │
+        │  SYNC_LIVE=1 : ingest + calculer     │
         │  SYNC_LIVE=0 : importer_snapshot     │
         │  puis regler_options + purger_chat   │
         └──────────────────────────────────────┘
@@ -35,8 +35,8 @@ Sur **VPS Docker**, l’app peut rester autonome (`ZANALYZ_SYNC_LIVE=1`) ou impo
 ## Schéma (PythonAnywhere + Engine)
 
 ```text
-SofaScore → Zanalyze-Engine (Actions / Oracle)
-                 ↓ exports/matchs.json (GitHub)
+ESPN → Zanalyze-Engine (Actions / Oracle)
+              ↓ exports/matchs.json (GitHub)
 Zanalyze PA  ← importer_snapshot --url
 ```
 

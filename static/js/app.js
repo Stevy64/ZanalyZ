@@ -884,6 +884,20 @@ function zanalyz() {
       return 'En attente';
     },
 
+    bilanResume(fiche) {
+      const opts = this.optionsApercu(fiche);
+      if (!opts.length) return null;
+      let ok = 0;
+      let ko = 0;
+      let attente = 0;
+      for (const o of opts) {
+        if (o.resultat === 'gagne') ok += 1;
+        else if (o.resultat === 'perdu') ko += 1;
+        else attente += 1;
+      }
+      return { ok, ko, attente, total: opts.length };
+    },
+
     optionsApercu(fiche) {
       if (!fiche || !fiche.analyse) return [];
       const ordre = { prudente: 0, recommandee: 1, equilibree: 2, audacieuse: 3, filet: 4 };
@@ -1193,7 +1207,7 @@ function zanalyz() {
 
     get recoFiche() {
       if (!this.fiche || !this.fiche.analyse) return [];
-      const ordre = { prudente: 0, recommandee: 1, equilibree: 2, audacieuse: 3 };
+      const ordre = { prudente: 0, recommandee: 1, equilibree: 2, audacieuse: 3, filet: 4 };
       return this.fiche.analyse.options
         .filter((o) => o.niveau in ordre)
         .sort((a, b) => ordre[a.niveau] - ordre[b.niveau]);

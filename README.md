@@ -3,7 +3,7 @@
 PWA d’aide à la décision pour les paris football. Affiche des **chances** et une **cote juste**.  
 Ne prend pas de paris, ne se connecte à aucun bookmaker, ne promet aucun gain.
 
-Stack : **Django 5 + DRF** (PWA Alpine). L’ingest SofaScore et les modèles v3.1 sont dans le git séparé **[Zanalyze Engine](https://github.com/Stevy64/Zanalyze-Engine)** — voir [docs/engine.md](docs/engine.md).
+Stack : **Django 5 + DRF** (PWA Alpine). Les modèles v3.1 et l’ingest live (ESPN) sont dans le git séparé **[Zanalyze Engine](https://github.com/Stevy64/Zanalyze-Engine)** — voir [docs/engine.md](docs/engine.md).
 
 ---
 
@@ -47,8 +47,6 @@ python manage.py migrate
 python manage.py createsuperuser
 # Données : Zanalyze Engine (`python -m engine refresh`) puis :
 python manage.py importer_snapshot --source ../Zanalyze-Engine/exports/matchs.json
-# ou encore (VPS / local, egress libre) :
-python manage.py synchroniser_sofascore --calculer
 python manage.py runserver
 ```
 
@@ -70,7 +68,7 @@ pytest
 | **VPS Docker (OVH / Oracle…)** | [docs/docker.md](docs/docker.md) + [docs/ovh-vps.md](docs/ovh-vps.md) | **Recommandé** — stack complète autonome |
 | Feuille de route | [docs/deploy.md](docs/deploy.md) | Choix d’hébergeur |
 | Architecture | [docs/architecture.md](docs/architecture.md) | web · moteur · worker · db · redis · nginx |
-| **PythonAnywhere** | [docs/pythonanywhere.md](docs/pythonanywhere.md) | SofaScore bloqué ; import snapshot Engine |
+| **PythonAnywhere** | [docs/pythonanywhere.md](docs/pythonanywhere.md) | Import snapshot Engine |
 | **Zanalyze Engine** | [docs/engine.md](docs/engine.md) | Git séparé, Actions gratuit / Oracle Always Free |
 
 ### Prod Docker en 5 commandes
@@ -85,7 +83,7 @@ make superuser
 # → http://TON_IP/  (port ZANALYZ_HTTP_PORT, défaut 80)
 ```
 
-Le **worker** enchaîne toutes les ~2 h : sync (SofaScore **ou** snapshot Engine) → règlement → purge chat.  
+Le **worker** enchaîne toutes les ~2 h : sync (ingest live **ou** snapshot Engine) → règlement → purge chat.  
 Détail variables : `.env.example` et [docs/architecture.md](docs/architecture.md).
 
 ---

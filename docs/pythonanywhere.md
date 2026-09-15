@@ -3,7 +3,7 @@
 Guide **pas à pas** (compte Beginner ou payant).  
 **Pas de Docker** sur PythonAnywhere — app WSGI classique.
 
-> **Pourquoi aucun match ?** Sur le free tier, SofaScore est **hors whitelist**.
+> **Pourquoi aucun match ?** Sur le free tier, l’ingest live n’est pas fiable.
 > La source de vérité est **[Zanalyze Engine](https://github.com/Stevy64/Zanalyze-Engine)**
 > (GitHub Actions ou Oracle Always Free). PA **importe** seulement le snapshot.
 
@@ -42,7 +42,7 @@ Recharge la page Matchs. Le filtre date doit correspondre au snapshot (`--jours 
 
 | Fréquence | Action |
 |-----------|--------|
-| Engine (Actions) | sync SofaScore + analyses + push JSON |
+| Engine (Actions) | sync ESPN + analyses + push JSON |
 | PA | `importer_snapshot --url …` |
 
 Fallback manuel (PC) : `make sync-dev` puis `make snapshot-export-dev` dans **ce** repo.

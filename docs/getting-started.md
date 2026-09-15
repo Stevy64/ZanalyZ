@@ -51,10 +51,11 @@ make sync-dev
 Équivalent manuel :
 
 ```bash
+# Données via le snapshot Engine (recommandé) :
+#   python -m engine refresh --provider espn --jours 21
+#   python manage.py importer_snapshot --source ../Zanalyze-Engine/exports/matchs.json
 docker compose -f docker-compose.dev.yml exec web \
-  python manage.py synchroniser_sofascore --pages 1
-docker compose -f docker-compose.dev.yml exec web \
-  python manage.py calculer_analyses
+  python manage.py importer_snapshot --source /app/exports/matchs.json
 ```
 
 Contexte terrain (forme / H2H / absents) — plus lent, optionnel :

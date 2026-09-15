@@ -282,15 +282,25 @@
         </div>
         <template x-if="fiche">
           <div>
-            <div class="bilan-wrap" x-show="fiche.statut === 'termine' && recoFiche.length" x-cloak>
+            <div class="bilan-wrap" x-show="fiche.statut === 'termine'" x-cloak>
               <div class="bilan-head">
                 <span class="panel-ico" x-html="icon('trophy')"></span>
                 <div>
                   <h2>Bilan des recommandations</h2>
-                  <p class="hint">Résultat réel face aux paris proposés pour ce match.</p>
+                  <p class="hint" x-show="recoFiche.length">Résultat réel face aux tips proposés pour ce match.</p>
+                  <p class="hint" x-show="!recoFiche.length">
+                    Score final <strong x-text="fiche.score || '—'"></strong>.
+                    Aucun tip archivé pour ce match.
+                  </p>
                 </div>
               </div>
-              <div class="bilan-grid">
+              <div class="bilan-resume" x-show="recoFiche.length && bilanResume(fiche)" x-cloak>
+                <span class="bilan-chip ok" x-text="bilanResume(fiche).ok + ' OK'"></span>
+                <span class="bilan-chip ko" x-text="bilanResume(fiche).ko + ' KO'"></span>
+                <span class="bilan-chip wait" x-show="bilanResume(fiche).attente"
+                  x-text="bilanResume(fiche).attente + ' en attente'"></span>
+              </div>
+              <div class="bilan-grid" x-show="recoFiche.length">
                 <template x-for="o in recoFiche" :key="o.code">
                   <article :class="'bilan-item bilan-' + (o.resultat || 'attente')">
                     <div class="bilan-status">
@@ -1358,7 +1368,19 @@
             <span class="crest-wrap crest-fallback" x-html="crestSvg(apercu.exterieur, 40)" style="display:none"></span>
           </button>
         </div>
-        <template x-if="!optionsApercu(apercu).length">
+        <div class="bilan-resume" x-show="apercu.statut === 'termine' && bilanResume(apercu)" x-cloak>
+          <span class="bilan-chip ok" x-text="bilanResume(apercu).ok + ' OK'"></span>
+          <span class="bilan-chip ko" x-text="bilanResume(apercu).ko + ' KO'"></span>
+          <span class="bilan-chip wait" x-show="bilanResume(apercu).attente"
+            x-text="bilanResume(apercu).attente + ' en attente'"></span>
+        </div>
+        <template x-if="apercu.statut === 'termine' && !optionsApercu(apercu).length">
+          <p class="hint">
+            Aucun tip archivé pour ce match (pas d’analyse avant le coup d’envoi).
+            Les prochains matchs terminés afficheront le bilan OK/KO ici.
+          </p>
+        </template>
+        <template x-if="apercu.statut !== 'termine' && !optionsApercu(apercu).length">
           <p class="hint">Pas encore d’analyse pour ce match.</p>
         </template>
         <template x-for="o in optionsApercu(apercu)" :key="o.code">

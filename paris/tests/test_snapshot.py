@@ -71,9 +71,9 @@ class SnapshotRoundtripTests(TestCase):
         self.assertEqual(m.domicile.slug, 'home-fc')
         self.assertTrue(hasattr(m, 'analyse'))
         self.assertEqual(m.analyse.options.count(), 1)
-        # Logos navigateur : URL CDN dérivée de sofascore_id
+        # Logos navigateur : URL CDN embarquée (ESPN), pas de fallback tiers.
         from paris.clubs import logo_url_pour
-        self.assertIn('sofascore.com', logo_url_pour(m.domicile))
+        self.assertEqual(logo_url_pour(m.domicile), '')
 
     def test_import_reutilise_equipe_meme_nom_autre_sid(self):
         """Migration SofaScore → ESPN : même nom, nouvel id, slug différent."""

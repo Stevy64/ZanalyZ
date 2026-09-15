@@ -1,6 +1,6 @@
 ﻿# Déploiement Zanalyze sur VPS OVH Cloud (recommandé)
 
-Cible **production** : egress libre → SofaScore OK, TLS, cron, Postgres possible.
+Cible **production** : egress libre → ingest ESPN / snapshot Engine OK, TLS, cron, Postgres possible.
 
 Deux chemins :
 
@@ -174,13 +174,13 @@ sudo bash deploy/update.sh
 - [ ] DNS A → VPS
 - [ ] `.env` prod (SECRET_KEY, ALLOWED_HOSTS, CSRF, SSL)
 - [ ] Docker **ou** `zanalyz.service` + nginx + TLS
-- [ ] Sync SofaScore + analyses + règlement
+- [ ] Sync Engine / analyses + règlement
 - [ ] PWA HTTPS OK (`/health/` → ok)
 
 ## Avant OVH : PythonAnywhere
 
 Pour un premier essai UI/admin sans VPS : [pythonanywhere.md](pythonanywhere.md)  
-(sync SofaScore souvent bloquée sur le free tier).
+(ingest live souvent limité sur le free tier — préférer le snapshot Engine).
 
 ## Autre hébergeur
 

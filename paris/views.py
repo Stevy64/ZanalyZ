@@ -23,7 +23,6 @@ from paris.models import (
 )
 from paris.moteur import VERSION_MOTEUR
 from paris.reglement import regler_match
-from paris import sofascore as sofa
 from paris.chat import messages_actifs, purger_messages_expires
 from paris.roles import est_vip, payload_auth
 from paris.serializers import (
@@ -93,7 +92,7 @@ def _fenetre_jour(d):
 
 
 def _matchs_qs():
-    # Uniquement matchs issus d’une source externe (SofaScore).
+    # Uniquement matchs issus d’une source externe (ids snapshot / ESPN).
     # Les JSON de démo (sans sofascore_id) ne doivent jamais apparaître en prod.
     return (
         Match.objects
@@ -542,19 +541,6 @@ class OptionVote(APIView):
         return Response(OptionDetailSerializer(option, context={'request': request}).data)
 
 
-def _sid_equipe(eq: Equipe) -> int | None:
-    """Id source primaire connu, ou résolution via recherche (sans casser l’unicité)."""
-    if eq.sofascore_id:
-        return eq.sofascore_id
-    found = sofa.chercher_equipe_id(eq.nom) or sofa.chercher_equipe_id(eq.nom_court)
-    if not found:
-        return None
-    if not Equipe.objects.filter(sofascore_id=found).exclude(pk=eq.pk).exists():
-        eq.sofascore_id = found
-        eq.save(update_fields=['sofascore_id'])
-    return found
-
-
 def _tsdb_id(eq: Equipe) -> int | None:
     """Id TheSportsDB (secours logos / fiche club)."""
     from paris import thesportsdb as tsdb
@@ -570,6 +556,26 @@ def _tsdb_id(eq: Equipe) -> int | None:
     return found
 
 
+def _logo_bytes_externe(url: str) -> tuple[bytes, str] | None:
+    """Télécharge un logo CDN déjà connu (ESPN, etc.)."""
+    import urllib.error
+    import urllib.request
+
+    url = (url or '').strip()
+    if not url.startswith(('http://', 'https://')):
+        return None
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Zanalyze/1.0'})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            body = resp.read()
+            ctype = (resp.headers.get('Content-Type') or 'image/png').split(';')[0]
+            if body:
+                return body, ctype
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return None
+    return None
+
+
 def _infos_equipe_locale(eq: Equipe) -> dict:
     from paris.clubs import infos_equipe_locale
     return infos_equipe_locale(eq)
@@ -582,9 +588,10 @@ class EquipeLogo(APIView):
         from django.core.cache import cache
         from django.http import HttpResponse
         from paris import thesportsdb as tsdb
+        from paris.clubs import logo_svg_placeholder
 
         eq = get_object_or_404(Equipe, pk=pk)
-        cache_key = f'logo:v2:{eq.pk}'
+        cache_key = f'logo:v3:{eq.pk}'
         cached = cache.get(cache_key)
         if cached:
             body, ctype = cached
@@ -594,12 +601,9 @@ class EquipeLogo(APIView):
 
         body = None
         ctype = 'image/png'
-        sid = _sid_equipe(eq)
-        if sid:
-            try:
-                body, ctype = sofa.logo_bytes(sid)
-            except sofa.SofaScoreErreur:
-                body = None
+        fetched = _logo_bytes_externe(eq.logo_externe or '')
+        if fetched:
+            body, ctype = fetched
         if body is None:
             tid = _tsdb_id(eq)
             if tid:
@@ -608,7 +612,7 @@ class EquipeLogo(APIView):
                 except tsdb.SportsDbErreur:
                     body = None
         if body is None:
-            body = sofa.logo_svg_placeholder(eq.nom, eq.nom_court)
+            body = logo_svg_placeholder(eq.nom, eq.nom_court)
             ctype = 'image/svg+xml'
             cache.set(cache_key, (body, ctype), 60 * 30)
         else:
@@ -646,20 +650,10 @@ class EquipeInfos(APIView):
             '1', 'true', 'yes', 'on',
         )
 
-        # Tentative live — jamais bloquante. Sur PA (SYNC_LIVE=0) on évite SofaScore
-        # car sofascore_id contient souvent des ids ESPN incompatibles.
+        # Enrichissement live optionnel (TheSportsDB) — jamais bloquant.
+        # Les ids externes du snapshot sont ESPN (colonne legacy sofascore_id).
         live = None
         if sync_live:
-            sid = _sid_equipe(eq)
-            if sid:
-                tid = None
-                if m and m.competition.sofascore_id:
-                    tid = m.competition.sofascore_id
-                try:
-                    live = sofa.infos_equipe(sid, tournament_id=tid)
-                except Exception:  # noqa: BLE001 — timeout / 403 / id ESPN
-                    live = None
-        if live is None:
             try:
                 tsid = _tsdb_id(eq)
                 if tsid:
