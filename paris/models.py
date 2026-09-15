@@ -4,7 +4,7 @@ from django.utils import timezone
 
 
 class Competition(models.Model):
-    code = models.SlugField(max_length=20, unique=True)   # 'PL', 'LIGA', 'UCL'
+    code = models.SlugField(max_length=20, unique=True)   # 'PL', 'BL', 'UCL', 'FAC', …
     nom = models.CharField(max_length=80)                  # 'Premier League'
     pays = models.CharField(max_length=40, blank=True)
     ordre = models.PositiveSmallIntegerField(default=100)  # ordre d'affichage

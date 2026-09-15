@@ -1803,6 +1803,18 @@ input, select {
   width: 100%;
 }
 .checks { list-style: none; padding: 0; margin: 0; }
+.comp-pays { margin-top: 14px; }
+.comp-pays:first-of-type { margin-top: 8px; }
+.comp-pays-titre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--muted);
+}
+.comp-pays-titre .flag { width: 18px; height: 18px; }
 .checks li {
   background: #f7f8fb;
   border-radius: var(--radius-sm);

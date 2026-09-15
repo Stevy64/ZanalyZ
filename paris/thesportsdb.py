@@ -18,11 +18,17 @@ logger = logging.getLogger(__name__)
 BASE = 'https://www.thesportsdb.com/api/v1/json/3'
 
 # Compétitions Zanalyze → idLeague TheSportsDB
+# Compétitions Zanalyze → idLeague TheSportsDB (ids publics vérifiés)
 LIGUES = {
     'PL': 4328,
+    'FAC': 4482,
+    'EFL': 4570,
     'LIGA': 4335,
+    'CDR': 4483,
+    'BL': 4331,
     'L1': 4334,
     'SA': 4332,
+    'LP': 4344,
     'UCL': 4480,
 }
 
@@ -160,7 +166,8 @@ def chercher_equipe(nom: str) -> dict[str, Any] | None:
         # Prefer senior clubs from major leagues when tied loosely
         if t.get('strLeague') in (
             'English Premier League', 'Spanish La Liga', 'French Ligue 1',
-            'Italian Serie A', 'German Bundesliga', 'UEFA Champions League',
+            'Italian Serie A', 'German Bundesliga', 'Portuguese Primeira Liga',
+            'UEFA Champions League',
         ):
             score += 5
         meilleurs.append((score, t))

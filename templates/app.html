@@ -812,24 +812,32 @@
 
         <section class="bloc-card">
           <h2>Compétitions suivies</h2>
-          <p class="hint">Désactive un interrupteur pour retirer la ligue des puces d’accueil.</p>
-          <ul class="checks">
-            <template x-for="c in competitionsAll" :key="c.code">
-              <li>
-                <button type="button" class="switch-row" :aria-pressed="!masquees.includes(c.code)"
-                  @click="toggleComp(c.code)">
-                  <span class="switch-comp">
-                    <span class="flag-wrap" x-html="drapeauComp(c)"></span>
-                    <span>
-                      <strong x-text="c.nom"></strong>
-                      <small x-text="c.code"></small>
-                    </span>
-                  </span>
-                  <span class="switch" :class="!masquees.includes(c.code) ? 'on' : ''" aria-hidden="true"></span>
-                </button>
-              </li>
-            </template>
-          </ul>
+          <p class="hint">Ligues + coupes nationales. Désactive un interrupteur pour retirer la compétition des puces d’accueil.</p>
+          <template x-for="groupe in competitionsParPays" :key="groupe.pays">
+            <div class="comp-pays">
+              <h3 class="comp-pays-titre">
+                <span class="flag-wrap" x-html="groupe.flagHtml"></span>
+                <span x-text="groupe.pays"></span>
+              </h3>
+              <ul class="checks">
+                <template x-for="c in groupe.comps" :key="c.code">
+                  <li>
+                    <button type="button" class="switch-row" :aria-pressed="!masquees.includes(c.code)"
+                      @click="toggleComp(c.code)">
+                      <span class="switch-comp">
+                        <span class="flag-wrap" x-html="drapeauComp(c)"></span>
+                        <span>
+                          <strong x-text="c.nom"></strong>
+                          <small x-text="c.code"></small>
+                        </span>
+                      </span>
+                      <span class="switch" :class="!masquees.includes(c.code) ? 'on' : ''" aria-hidden="true"></span>
+                    </button>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </template>
           <p class="vide vide-sm" x-show="!competitionsAll.length">Aucune compétition importée pour l’instant.</p>
         </section>
 

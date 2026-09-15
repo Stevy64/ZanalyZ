@@ -214,10 +214,17 @@ function icon(name, cls) {
 
 /** Drapeaux SVG (hors ligne) — code ligue ou pays. */
 const FLAG_BY_CODE = {
-  UCL: 'eu', PL: 'gb', LIGA: 'es', L1: 'fr', SA: 'it',
+  UCL: 'eu',
+  PL: 'gb', FAC: 'gb', EFL: 'gb',
+  LIGA: 'es', CDR: 'es',
+  BL: 'de', DFB: 'de',
+  L1: 'fr', CDF: 'fr',
+  SA: 'it', CI: 'it',
+  LP: 'pt', TDP: 'pt',
 };
 const FLAG_BY_PAYS = {
-  Europe: 'eu', Angleterre: 'gb', Espagne: 'es', France: 'fr', Italie: 'it',
+  Europe: 'eu', Angleterre: 'gb', Espagne: 'es', Allemagne: 'de',
+  France: 'fr', Italie: 'it', Portugal: 'pt',
 };
 const FLAG_SVG = {
   eu: (() => {
@@ -239,12 +246,19 @@ const FLAG_SVG = {
   es: '<rect width="36" height="36" fill="#AA151B"/>'
     + '<rect y="9" width="36" height="18" fill="#F1BF00"/>'
     + '<rect x="8" y="13.5" width="5" height="9" rx=".6" fill="#AA151B" opacity=".85"/>',
+  de: '<rect width="36" height="12" fill="#000"/>'
+    + '<rect y="12" width="36" height="12" fill="#DD0000"/>'
+    + '<rect y="24" width="36" height="12" fill="#FFCE00"/>',
   fr: '<rect width="12" height="36" fill="#002395"/>'
     + '<rect x="12" width="12" height="36" fill="#fff"/>'
     + '<rect x="24" width="12" height="36" fill="#ED2939"/>',
   it: '<rect width="12" height="36" fill="#009246"/>'
     + '<rect x="12" width="12" height="36" fill="#fff"/>'
     + '<rect x="24" width="12" height="36" fill="#CE2B37"/>',
+  pt: '<rect width="36" height="36" fill="#FF0000"/>'
+    + '<rect width="14.4" height="36" fill="#006600"/>'
+    + '<circle cx="14.4" cy="18" r="5.2" fill="#FFCC00"/>'
+    + '<circle cx="14.4" cy="18" r="3.2" fill="#FF0000"/>',
 };
 
 function flagKeyForComp(comp) {
@@ -838,8 +852,14 @@ function zanalyz() {
 
     async chargerCompetitions() {
       const { data } = await getJSON('/api/v1/competitions/');
-      this.competitionsAll = data || [];
-      this.competitions = this.competitionsAll.filter((c) => !this.masquees.includes(c.code));
+      const list = (data || []).slice().sort((a, b) => {
+        const oa = Number(a.ordre ?? 100);
+        const ob = Number(b.ordre ?? 100);
+        if (oa !== ob) return oa - ob;
+        return String(a.nom || '').localeCompare(String(b.nom || ''), 'fr');
+      });
+      this.competitionsAll = list;
+      this.competitions = list.filter((c) => !this.masquees.includes(c.code));
     },
 
     async chargerMatchs(opts = {}) {
@@ -985,6 +1005,20 @@ function zanalyz() {
       else this.masquees.push(code);
       localStorage.setItem(LS_MASQUEES, JSON.stringify(this.masquees));
       this.competitions = this.competitionsAll.filter((c) => !this.masquees.includes(c.code));
+    },
+
+    get competitionsParPays() {
+      const map = new Map();
+      for (const c of this.competitionsAll) {
+        const pays = c.pays || 'Autre';
+        if (!map.has(pays)) map.set(pays, []);
+        map.get(pays).push(c);
+      }
+      return [...map.entries()].map(([pays, comps]) => ({
+        pays,
+        comps,
+        flagHtml: drapeauComp(comps[0]),
+      }));
     },
 
     get groupes() {

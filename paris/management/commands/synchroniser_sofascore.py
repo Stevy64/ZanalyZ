@@ -21,7 +21,7 @@ from paris.reglement import regler_match
 class Command(BaseCommand):
     help = (
         'Synchronise les matchs à venir / récents (cotes, scores) depuis '
-        'SofaScore pour PL, LIGA, L1, SA, UCL. '
+        'SofaScore pour UCL, PL/FAC/EFL, LIGA/CDR, BL/DFB, L1/CDF, SA/CI, LP/TDP. '
         'Les transactions DB restent courtes (pas de HTTP dedans).'
     )
 
