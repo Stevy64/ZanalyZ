@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Calibration MARCHE PAR MARCHE (moteur v3.1), avec cohérence des complémentaires.
 
 Validé hors échantillon sur 224 163 observations :
@@ -20,7 +20,7 @@ _FICHIER_DEFAUT = _ICI / 'calibration_par_marche.json'
 
 COMPLEMENT = '~'
 
-# Clé de marché par code d'option ZanalyZ (stable, indépendant du libellé).
+# Clé de marché par code d'option Zanalyze (stable, indépendant du libellé).
 CODE_VERS_MARCHE: dict[str, Any] = {
     'OV_0.5': '+0.5',
     'OV_1.5': '+1.5',

@@ -1,4 +1,4 @@
-# Zanalyze
+﻿# Zanalyze
 
 PWA d’aide à la décision pour les paris football. Affiche des **chances** et une **cote juste**.  
 Ne prend pas de paris, ne se connecte à aucun bookmaker, ne promet aucun gain.
@@ -12,8 +12,8 @@ Stack : **Django 5 + DRF** (PWA Alpine). L’ingest SofaScore et les modèles v3
 ### Option A — Docker (recommandé)
 
 ```bash
-git clone https://github.com/Stevy64/ZanalyZ.git
-cd ZanalyZ
+git clone https://github.com/Stevy64/Zanalyze.git
+cd Zanalyze
 cp .env.example .env
 
 # Si pip/DNS flaky dans Docker Desktop (Windows) :
@@ -46,7 +46,7 @@ cp .env.example .env
 python manage.py migrate
 python manage.py createsuperuser
 # Données : Zanalyze Engine (`python -m engine refresh`) puis :
-python manage.py importer_snapshot --source ../zanalyze-engine/exports/matchs.json
+python manage.py importer_snapshot --source ../Zanalyze-Engine/exports/matchs.json
 # ou encore (VPS / local, egress libre) :
 python manage.py synchroniser_sofascore --calculer
 python manage.py runserver

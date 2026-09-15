@@ -1,4 +1,4 @@
-# Déployer Zanalyze sur PythonAnywhere
+﻿# Déployer Zanalyze sur PythonAnywhere
 
 Guide **pas à pas** (compte Beginner ou payant).  
 **Pas de Docker** sur PythonAnywhere — app WSGI classique.
@@ -20,7 +20,7 @@ Le workflow du repo engine commit `exports/matchs.json` toutes les ~2 h.
 ### B. Sur PythonAnywhere (Scheduled task)
 
 ```bash
-cd ~/ZanalyZ
+cd ~/Zanalyze
 source ~/.virtualenvs/zanalyz/bin/activate
 set -a && source .env && set +a
 python manage.py importer_snapshot --url https://raw.githubusercontent.com/Stevy64/Zanalyze-Engine/main/exports/matchs.json
@@ -53,8 +53,8 @@ Fallback manuel (PC) : `make sync-dev` puis `make snapshot-export-dev` dans **ce
 
 ```bash
 cd ~
-git clone https://github.com/Stevy64/ZanalyZ.git
-cd ZanalyZ
+git clone https://github.com/Stevy64/Zanalyze.git
+cd Zanalyze
 ```
 
 ---
@@ -64,7 +64,7 @@ cd ZanalyZ
 Python **3.10** ou **3.11**.
 
 ```bash
-cd ~/ZanalyZ
+cd ~/Zanalyze
 python3.11 -m venv ~/.virtualenvs/zanalyz
 source ~/.virtualenvs/zanalyz/bin/activate
 pip install -U pip
@@ -114,7 +114,7 @@ Les **fiches club** (blason) viennent du champ embarqué dans le snapshot.
 ## 5. Web app WSGI
 
 1. **Web** → Manual configuration → même Python que le venv  
-2. Source / working dir : `/home/TONUSER/ZanalyZ`  
+2. Source / working dir : `/home/TONUSER/Zanalyze`  
 3. Virtualenv : `/home/TONUSER/.virtualenvs/zanalyz`  
 4. WSGI :
 
@@ -123,7 +123,7 @@ import os
 import sys
 from dotenv import load_dotenv
 
-project_home = "/home/TONUSER/ZanalyZ"
+project_home = "/home/TONUSER/Zanalyze"
 if project_home not in sys.path:
     sys.path.insert(0, project_home)
 load_dotenv(os.path.join(project_home, ".env"))
@@ -138,15 +138,15 @@ application = get_wsgi_application()
 
    | URL | Directory |
    |-----|-----------|
-   | `/static/` | `/home/TONUSER/ZanalyZ/staticfiles` |
-   | `/media/` | `/home/TONUSER/ZanalyZ/media` |
+   | `/static/` | `/home/TONUSER/Zanalyze/staticfiles` |
+   | `/media/` | `/home/TONUSER/Zanalyze/media` |
 
    Puis clique **Reload** en haut de la page Web.
 
 6. Créer le dossier media si besoin :
 
 ```bash
-mkdir -p ~/ZanalyZ/media
+mkdir -p ~/Zanalyze/media
 ```
 
 7. **Reload** — health : `/health/`

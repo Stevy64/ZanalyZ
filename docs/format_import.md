@@ -1,4 +1,4 @@
-# Format d'import JSON — ZanalyZ
+﻿# Format d'import JSON — Zanalyze
 
 > **Attention** : cet import est réservé aux **démos / tests**. En usage normal,
 > les matchs viennent uniquement de `synchroniser_sofascore`. Un JSON inventé

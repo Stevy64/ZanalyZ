@@ -1,4 +1,4 @@
-# Déploiement ZanalyZ sur VPS OVH Cloud (recommandé)
+﻿# Déploiement Zanalyze sur VPS OVH Cloud (recommandé)
 
 Cible **production** : egress libre → SofaScore OK, TLS, cron, Postgres possible.
 
@@ -27,7 +27,7 @@ sudo usermod -aG docker "$USER"   # puis reconnecte-toi en SSH
 sudo mkdir -p /var/www/zanalyz
 sudo chown "$USER":"$USER" /var/www/zanalyz
 cd /var/www/zanalyz
-git clone https://github.com/Stevy64/ZanalyZ.git .
+git clone https://github.com/Stevy64/Zanalyze.git .
 
 cp .env.example .env
 nano .env
@@ -82,7 +82,7 @@ sudo apt install -y python3 python3-venv python3-dev nginx git \
 sudo mkdir -p /var/www/zanalyz
 sudo chown "$USER":www-data /var/www/zanalyz
 cd /var/www/zanalyz
-git clone https://github.com/Stevy64/ZanalyZ.git .
+git clone https://github.com/Stevy64/Zanalyze.git .
 ```
 
 ### 2. Environnement

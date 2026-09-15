@@ -1,4 +1,4 @@
-# Moteur de pronostics — version 3.1 (intégré dans ZanalyZ)
+﻿# Moteur de pronostics — version 3.1 (intégré dans Zanalyze)
 
 Modules portés dans `paris/` :
 

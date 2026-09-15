@@ -1,10 +1,10 @@
-# Zanalyze ↔ Zanalyze Engine
+﻿# Zanalyze ↔ Zanalyze Engine
 
-La PWA **Zanalyze** (ce repo, GitHub `ZanalyZ`) affiche matchs et tips.  
+La PWA **Zanalyze** (ce repo, GitHub `Zanalyze`) affiche matchs et tips.  
 Le calcul et l’ingest SofaScore vivent dans un git **séparé** :
 
 → **[Zanalyze-Engine](https://github.com/Stevy64/Zanalyze-Engine)**  
-  (copie locale : `../zanalyze-engine`)
+  (copie locale : `../Zanalyze-Engine`)
 
 PythonAnywhere **blackliste** SofaScore. Le moteur tourne sur GitHub Actions ou Oracle Always Free, et publie `exports/matchs.json`.
 

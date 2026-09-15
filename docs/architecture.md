@@ -1,8 +1,8 @@
-# Architecture Zanalyze + Zanalyze Engine
+﻿# Architecture Zanalyze + Zanalyze Engine
 
 Deux git :
 
-- **Zanalyze** (ce repo `ZanalyZ`) : PWA Django, admin, VIP
+- **Zanalyze** (ce repo `Zanalyze`) : PWA Django, admin, VIP
 - **[Zanalyze Engine](https://github.com/Stevy64/Zanalyze-Engine)** : SofaScore, modèles v3.1, snapshot v1
 
 Sur **PythonAnywhere**, Django n’appelle pas SofaScore (`ZANALYZ_SYNC_LIVE=0`) : il **importe** le JSON produit par l’engine. Voir [engine.md](engine.md).
@@ -35,7 +35,7 @@ Sur **VPS Docker**, l’app peut rester autonome (`ZANALYZ_SYNC_LIVE=1`) ou impo
 ## Schéma (PythonAnywhere + Engine)
 
 ```text
-SofaScore → zanalyze-engine (Actions / Oracle)
+SofaScore → Zanalyze-Engine (Actions / Oracle)
                  ↓ exports/matchs.json (GitHub)
 Zanalyze PA  ← importer_snapshot --url
 ```

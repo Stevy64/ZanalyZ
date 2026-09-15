@@ -1,5 +1,5 @@
-# ════════════════════════════════════════════
-# ZanalyZ — développement micro-services
+﻿# ════════════════════════════════════════════
+# Zanalyze — développement micro-services
 # make dev-build  |  docker compose -f docker-compose.dev.yml up --build
 # ════════════════════════════════════════════
 

@@ -1,4 +1,4 @@
-"""Client SofaScore (API non officielle).
+﻿"""Client SofaScore (API non officielle).
 
 Préfère curl_cffi (empreinte Chrome) ; bascule sur urllib si absent
 (utile sur PythonAnywhere quand le quota disque bloque l’install).
@@ -18,7 +18,7 @@ except ImportError:  # pragma: no cover - environnement sans curl_cffi
 
 BASE = 'https://api.sofascore.com/api/v1'
 
-# uniqueTournament id → code interne ZanalyZ
+# uniqueTournament id → code interne Zanalyze
 TOURNOIS = {
     7: {'code': 'UCL', 'nom': 'Ligue des champions', 'pays': 'Europe', 'ordre': 10},
     17: {'code': 'PL', 'nom': 'Premier League', 'pays': 'Angleterre', 'ordre': 20},

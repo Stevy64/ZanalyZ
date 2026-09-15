@@ -1,4 +1,4 @@
-# Prise en main — Zanalyze
+﻿# Prise en main — Zanalyze
 
 Guide pour lancer le projet en local et comprendre le flux quotidien.
 
@@ -10,8 +10,8 @@ Guide pour lancer le projet en local et comprendre le flux quotidien.
 ## 2. Premier démarrage (Docker)
 
 ```bash
-git clone https://github.com/Stevy64/ZanalyZ.git
-cd ZanalyZ
+git clone https://github.com/Stevy64/Zanalyze.git
+cd Zanalyze
 cp .env.example .env
 ```
 
@@ -37,7 +37,7 @@ Ouvre http://127.0.0.1:8000/ et connecte-toi à `/admin/`.
 Préféré : snapshot **Zanalyze Engine** (voir [engine.md](engine.md)) :
 
 ```bash
-python manage.py importer_snapshot --source ../zanalyze-engine/exports/matchs.json
+python manage.py importer_snapshot --source ../Zanalyze-Engine/exports/matchs.json
 # ou
 python manage.py importer_snapshot --url https://raw.githubusercontent.com/Stevy64/Zanalyze-Engine/main/exports/matchs.json
 ```

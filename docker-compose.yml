@@ -1,5 +1,5 @@
-# ════════════════════════════════════════════
-# ZanalyZ — production micro-services (OVH)
+﻿# ════════════════════════════════════════════
+# Zanalyze — production micro-services (OVH)
 # Images : zanalyz-prod, zanalyz-moteur
 # Services : nginx · web · moteur · worker · db · redis
 # ════════════════════════════════════════════

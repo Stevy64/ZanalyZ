@@ -1,4 +1,4 @@
-# Docker — ZanalyZ
+﻿# Docker — Zanalyze
 
 Stack alignée Makefile + images `zanalyz-dev` / `zanalyz-prod` / `zanalyz-moteur`.  
 Prise en main générale : [getting-started.md](getting-started.md).
