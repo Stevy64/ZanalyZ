@@ -7,6 +7,9 @@ La cible **recommandée** est un **VPS OVH** :
 Sur Oracle Cloud Always Free, la stack `deploy/` est la même (nginx + Gunicorn).  
 Particularités OCI : ouvrir **22 / 80 / 443** dans la **Security List** du VCN, image Ubuntu **ARM Ampere** (`VM.Standard.A1.Flex`).
 
+Pour n’héberger **que le moteur** (recommandé si la PWA reste sur PythonAnywhere) :
+→ repo **[Zanalyze-Engine](https://github.com/Stevy64/Zanalyze-Engine)** · [docs/oracle.md](https://github.com/Stevy64/Zanalyze-Engine/blob/main/docs/oracle.md)
+
 Voir l’ancien guide détaillé ci-dessous si tu restes sur OCI.
 
 ## Créer l’instance (rappel)

@@ -27,8 +27,8 @@ def _admin_index(request, extra_context=None):
 
 admin.site.index = _admin_index
 admin.site.index_template = 'admin/paris/index.html'
-admin.site.site_header = 'ZanalyZ'
-admin.site.site_title = 'ZanalyZ Admin'
+admin.site.site_header = 'Zanalyze'
+admin.site.site_title = 'Zanalyze Admin'
 admin.site.index_title = 'Tableau de bord'
 admin.site.enable_nav_sidebar = True
 

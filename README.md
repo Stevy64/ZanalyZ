@@ -1,9 +1,9 @@
-# ZanalyZ
+# Zanalyze
 
 PWA d’aide à la décision pour les paris football. Affiche des **chances** et une **cote juste**.  
 Ne prend pas de paris, ne se connecte à aucun bookmaker, ne promet aucun gain.
 
-Stack : **Django 5 + DRF** (PWA Alpine), **moteur v3.1** (FastAPI), **Postgres / Redis** en prod Docker, worker autonome.
+Stack : **Django 5 + DRF** (PWA Alpine). L’ingest SofaScore et les modèles v3.1 sont dans le git séparé **[Zanalyze Engine](https://github.com/Stevy64/Zanalyze-Engine)** — voir [docs/engine.md](docs/engine.md).
 
 ---
 
@@ -45,8 +45,10 @@ pip install -r requirements.txt
 cp .env.example .env
 python manage.py migrate
 python manage.py createsuperuser
-python manage.py synchroniser_sofascore
-python manage.py calculer_analyses
+# Données : Zanalyze Engine (`python -m engine refresh`) puis :
+python manage.py importer_snapshot --source ../zanalyze-engine/exports/matchs.json
+# ou encore (VPS / local, egress libre) :
+python manage.py synchroniser_sofascore --calculer
 python manage.py runserver
 ```
 
@@ -68,7 +70,8 @@ pytest
 | **VPS Docker (OVH / Oracle…)** | [docs/docker.md](docs/docker.md) + [docs/ovh-vps.md](docs/ovh-vps.md) | **Recommandé** — stack complète autonome |
 | Feuille de route | [docs/deploy.md](docs/deploy.md) | Choix d’hébergeur |
 | Architecture | [docs/architecture.md](docs/architecture.md) | web · moteur · worker · db · redis · nginx |
-| PythonAnywhere | [docs/pythonanywhere.md](docs/pythonanywhere.md) | Sans Docker ; egress calendrier souvent limité |
+| **PythonAnywhere** | [docs/pythonanywhere.md](docs/pythonanywhere.md) | SofaScore bloqué ; import snapshot Engine |
+| **Zanalyze Engine** | [docs/engine.md](docs/engine.md) | Git séparé, Actions gratuit / Oracle Always Free |
 
 ### Prod Docker en 5 commandes
 
@@ -82,7 +85,7 @@ make superuser
 # → http://TON_IP/  (port ZANALYZ_HTTP_PORT, défaut 80)
 ```
 
-Le **worker** enchaîne toutes les ~2 h : sync calendrier → analyses → règlement → purge chat.  
+Le **worker** enchaîne toutes les ~2 h : sync (SofaScore **ou** snapshot Engine) → règlement → purge chat.  
 Détail variables : `.env.example` et [docs/architecture.md](docs/architecture.md).
 
 ---

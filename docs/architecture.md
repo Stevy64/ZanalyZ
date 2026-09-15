@@ -1,9 +1,15 @@
-# Architecture micro-services ZanalyZ
+# Architecture Zanalyze + Zanalyze Engine
 
-L’app peut tourner **de façon autonome** sur le serveur : sync calendrier →
-analyse moteur → tips → règlement → purge chat, sans action manuelle.
+Deux git :
 
-## Schéma
+- **Zanalyze** (ce repo `ZanalyZ`) : PWA Django, admin, VIP
+- **[Zanalyze Engine](https://github.com/Stevy64/Zanalyze-Engine)** : SofaScore, modèles v3.1, snapshot v1
+
+Sur **PythonAnywhere**, Django n’appelle pas SofaScore (`ZANALYZ_SYNC_LIVE=0`) : il **importe** le JSON produit par l’engine. Voir [engine.md](engine.md).
+
+Sur **VPS Docker**, l’app peut rester autonome (`ZANALYZ_SYNC_LIVE=1`) ou importer le même snapshot.
+
+## Schéma (VPS Docker)
 
 ```text
                     ┌─────────────┐
@@ -11,27 +17,27 @@ analyse moteur → tips → règlement → purge chat, sans action manuelle.
                     └──────┬──────┘
                            │
                     ┌──────▼──────┐
-                    │ zanalyz │  PWA + API + Admin
-                    │    -web     │  (Gunicorn / Django)
+                    │ zanalyz-web │  PWA + API + Admin
                     └──────┬──────┘
-                           │ HTTP analyse
+                           │ HTTP analyse (optionnel)
                     ┌──────▼──────┐
-                    │ zanalyz │  Moteur v3.1 (FastAPI)
-                    │   -moteur   │  stateless CPU
+                    │ moteur      │  FastAPI v3.1 (image locale)
                     └─────────────┘
 
         ┌──────────────────────────────────────┐
-        │ zanalyz-worker (boucle ~2 h)     │
-        │  1. sync calendrier (+ calculer)     │
-        │  2. regler_options --apprendre       │
-        │  3. purger_chat                      │
-        │  lock Redis anti-chevauchement       │
-        └───────────┬──────────────────────────┘
-                    │
-         ┌──────────▼──────────┐     ┌─────────┐
-         │ zanalyz-db      │     │  redis  │
-         │ (Postgres)          │     │  lock   │
-         └─────────────────────┘     └─────────┘
+        │ worker (~2 h)                        │
+        │  SYNC_LIVE=1 : SofaScore + calculer  │
+        │  SYNC_LIVE=0 : importer_snapshot     │
+        │  puis regler_options + purger_chat   │
+        └──────────────────────────────────────┘
+```
+
+## Schéma (PythonAnywhere + Engine)
+
+```text
+SofaScore → zanalyze-engine (Actions / Oracle)
+                 ↓ exports/matchs.json (GitHub)
+Zanalyze PA  ← importer_snapshot --url
 ```
 
 ## Granularité (volontairement limitée)
@@ -53,6 +59,8 @@ Pas de découpage plus fin (auth service, etc.) : surcoût sans gain pour cette 
 ZANALYZ_MOTEUR_URL=http://moteur:8001
 ZANALYZ_REDIS_URL=redis://redis:6379/0
 ZANALYZ_WORKER_INTERVAL=7200          # secondes entre deux pipelines
+ZANALYZ_SYNC_LIVE=1                   # 0 = snapshot Engine (PythonAnywhere)
+ZANALYZ_SNAPSHOT_URL=                 # raw GitHub du JSON engine
 ZANALYZ_SYNC_PAGES=1
 ZANALYZ_SYNC_CONTEXTE=0               # 1 = H2H/forme (plus lent)
 ```

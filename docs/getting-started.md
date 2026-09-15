@@ -1,4 +1,4 @@
-# Prise en main — ZanalyZ
+# Prise en main — Zanalyze
 
 Guide pour lancer le projet en local et comprendre le flux quotidien.
 
@@ -33,6 +33,16 @@ make superuser-dev
 Ouvre http://127.0.0.1:8000/ et connecte-toi à `/admin/`.
 
 ### Remplir le calendrier
+
+Préféré : snapshot **Zanalyze Engine** (voir [engine.md](engine.md)) :
+
+```bash
+python manage.py importer_snapshot --source ../zanalyze-engine/exports/matchs.json
+# ou
+python manage.py importer_snapshot --url https://raw.githubusercontent.com/Stevy64/Zanalyze-Engine/main/exports/matchs.json
+```
+
+Toujours possible en local (egress libre) :
 
 ```bash
 make sync-dev

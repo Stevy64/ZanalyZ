@@ -64,9 +64,9 @@ def _get(path: str, *, timeout: float = 15) -> dict[str, Any]:
         reason = str(exc.reason)
         if '403' in reason:
             raise SofaScoreErreur(
-                'Accès SofaScore refusé (souvent whitelist PythonAnywhere free). '
-                'Passe en compte payant PA, ou lance la sync depuis un PC/VPS '
-                'puis importe les données. Détail : ' + reason
+                'Accès SofaScore refusé (souvent whitelist PythonAnywhere). '
+                'Utilise Zanalyze Engine (GitHub Actions / Oracle) puis '
+                'importer_snapshot --url. Détail : ' + reason
             ) from exc
         raise SofaScoreErreur(f'SofaScore indisponible : {exc.reason}') from exc
 

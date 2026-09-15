@@ -1,5 +1,5 @@
 """
-Django settings for ZanalyZ (dev local + prod VPS).
+Django settings for Zanalyze (dev local + prod VPS).
 """
 
 from __future__ import annotations
@@ -215,6 +215,8 @@ def _env_first(*keys: str, default: str = '') -> str:
 
 ZANALYZ_MOTEUR_URL = _env_first('ZANALYZ_MOTEUR_URL', 'C2B_MOTEUR_URL')
 ZANALYZ_REDIS_URL = _env_first('ZANALYZ_REDIS_URL', 'C2B_REDIS_URL')
+ZANALYZ_SNAPSHOT_URL = _env_first('ZANALYZ_SNAPSHOT_URL')
+ZANALYZ_SYNC_LIVE = _env_first('ZANALYZ_SYNC_LIVE', default='1')
 # Alias rétrocompat (imports / scripts externes éventuels)
 C2B_MOTEUR_URL = ZANALYZ_MOTEUR_URL
 C2B_REDIS_URL = ZANALYZ_REDIS_URL

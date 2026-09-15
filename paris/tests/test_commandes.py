@@ -102,3 +102,61 @@ class SofaScoreHelpersTests(TestCase):
         self.assertEqual(statut_depuis_code(60), 'reporte')
         self.assertEqual(statut_depuis_code(100), 'termine')
         self.assertEqual(statut_depuis_code(6), 'en_cours')
+
+
+class SnapshotEngineTests(TestCase):
+    def test_importer_snapshot_v1(self):
+        from pathlib import Path as P
+        from tempfile import TemporaryDirectory
+
+        payload = {
+            'version': 1,
+            'competitions': [{
+                'code': 'PL', 'nom': 'Premier League', 'pays': 'Angleterre',
+                'ordre': 20, 'actif': True, 'sofascore_id': 17,
+            }],
+            'equipes': [
+                {'nom': 'Arsenal', 'nom_court': 'Arsenal', 'slug': 'arsenal',
+                 'sofascore_id': 42, 'logo_externe': '', 'fiche_club': {}},
+                {'nom': 'Chelsea', 'nom_court': 'Chelsea', 'slug': 'chelsea',
+                 'sofascore_id': 43, 'logo_externe': '', 'fiche_club': {}},
+            ],
+            'matchs': [{
+                'sofascore_id': 9001,
+                'competition_code': 'PL',
+                'domicile_slug': 'arsenal',
+                'exterieur_slug': 'chelsea',
+                'coup_denvoi': '2026-09-20T15:00:00+00:00',
+                'journee': '5',
+                'statut': 'a_venir',
+                'buts_dom': None, 'buts_ext': None,
+                'cotes': [{
+                    'bookmaker': 'sofascore', 'marche': '1X2', 'selection': '1',
+                    'valeur': 1.9, 'nb_sources': 1,
+                    'releve_le': '2026-09-19T12:00:00+00:00',
+                }],
+                'analyse': {
+                    'buts_dom_attendus': 1.4, 'buts_ext_attendus': 1.1,
+                    'p1': 0.45, 'pn': 0.28, 'p2': 0.27,
+                    'score_probable': '1-1', 'profil': 'moyen',
+                    'marge_marche': 0.05, 'residu': 0.01,
+                    'version_moteur': '3.1.0',
+                    'options': [{
+                        'famille': '1X2', 'code': '1X2_1', 'libelle': 'Arsenal',
+                        'probabilite': 0.45, 'cote_juste': 2.22,
+                        'niveau': 'prudente', 'origine': 'marche',
+                    }],
+                },
+            }],
+        }
+        with TemporaryDirectory() as tmp:
+            path = P(tmp) / 'matchs.json'
+            path.write_text(json.dumps(payload), encoding='utf-8')
+            call_command('importer_snapshot', source=str(path), stdout=StringIO())
+        self.assertEqual(Match.objects.filter(sofascore_id=9001).count(), 1)
+        self.assertTrue(Match.objects.get(sofascore_id=9001).analyse.options.exists())
+
+    def test_importer_snapshot_fichier_absent(self):
+        with self.assertRaises(CommandError):
+            call_command('importer_snapshot', source='nexistepas-engine.json')
+

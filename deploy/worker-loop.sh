@@ -60,15 +60,27 @@ run_pipeline() {
   # shellcheck disable=SC2064
   trap release_lock EXIT
 
-  echo ">>> synchroniser_sofascore + calculer"
-  python manage.py synchroniser_sofascore --pages "${ZANALYZ_SYNC_PAGES:-${C2B_SYNC_PAGES:-1}}" --passes "${ZANALYZ_SYNC_PASSES:-${C2B_SYNC_PASSES:-1}}" --calculer \
-    || echo "WARN sync/calcul échoué (on continue)"
+  # 1 = ingest SofaScore dans Django (VPS egress libre).
+  # 0 = snapshot Zanalyze Engine (PythonAnywhere / pas de whitelist SofaScore).
+  if [ "${ZANALYZ_SYNC_LIVE:-1}" = "1" ]; then
+    echo ">>> synchroniser_sofascore + calculer"
+    python manage.py synchroniser_sofascore --pages "${ZANALYZ_SYNC_PAGES:-${C2B_SYNC_PAGES:-1}}" --passes "${ZANALYZ_SYNC_PASSES:-${C2B_SYNC_PASSES:-1}}" --calculer \
+      || echo "WARN sync/calcul échoué (on continue)"
 
-  # Contexte terrain (plus lent) — toutes les N boucles si demandé
-  if [ "${ZANALYZ_SYNC_CONTEXTE:-${C2B_SYNC_CONTEXTE:-0}}" = "1" ]; then
-    echo ">>> sync contexte"
-    python manage.py synchroniser_sofascore --pages 1 --passes 0 --contexte \
-      || echo "WARN contexte échoué"
+    if [ "${ZANALYZ_SYNC_CONTEXTE:-${C2B_SYNC_CONTEXTE:-0}}" = "1" ]; then
+      echo ">>> sync contexte"
+      python manage.py synchroniser_sofascore --pages 1 --passes 0 --contexte \
+        || echo "WARN contexte échoué"
+    fi
+  else
+    echo ">>> importer_snapshot (Zanalyze Engine)"
+    if [ -n "${ZANALYZ_SNAPSHOT_URL:-}" ]; then
+      python manage.py importer_snapshot --url "${ZANALYZ_SNAPSHOT_URL}" \
+        || echo "WARN import URL échoué"
+    else
+      python manage.py importer_snapshot --source "${ZANALYZ_SNAPSHOT_PATH:-exports/matchs.json}" \
+        || echo "WARN import fichier échoué"
+    fi
   fi
 
   echo ">>> regler_options --apprendre"

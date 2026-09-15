@@ -70,7 +70,7 @@ function texteVersPdfBlob(titre, blocs) {
     (b.lines || []).forEach((l) => push('  ' + l, 'opt'));
     push('', 'gap');
   });
-  push('ZanalyZ', 'foot');
+  push('Zanalyze', 'foot');
 
   const pageW = 595;
   const pageH = 842;
@@ -399,7 +399,7 @@ function zanalyz() {
     estVip: false,
     authShowPass: false,
     whatsappVipUrl: '',
-    vipTarifLibelle: 'VIP ZanalyZ',
+    vipTarifLibelle: 'VIP Zanalyze',
     sheetVip: false,
     cacheBanner: false,
     cacheLabel: '',
@@ -522,7 +522,7 @@ function zanalyz() {
         this.categorie = (data && data.categorie) || (this.authentifie ? 'membre' : 'visiteur');
         this.estVip = !!(data && data.est_vip) || this.categorie === 'vip';
         this.whatsappVipUrl = (data && data.whatsapp_vip_url) || '';
-        this.vipTarifLibelle = (data && data.vip_tarif_libelle) || 'VIP ZanalyZ';
+        this.vipTarifLibelle = (data && data.vip_tarif_libelle) || 'VIP Zanalyze';
         if (data && data.version_moteur) this.moteur = data.version_moteur;
         this.demarrerUnreadPoll();
       } catch (_) { /* hors ligne */ }
@@ -1390,7 +1390,7 @@ function zanalyz() {
     async ouvrirCompos() {
       if (!this.authentifie) {
         this.ouvrirAuth(
-          'Connecte-toi pour ouvrir Nos ZanalyZ.',
+          'Connecte-toi pour ouvrir Nos Zanalyze.',
           () => this.ouvrirCompos(),
         );
         return;
@@ -1498,7 +1498,7 @@ function zanalyz() {
         });
         lignes.push('');
       });
-      lignes.push('ZanalyZ');
+      lignes.push('Zanalyze');
       return lignes;
     },
 
@@ -1524,16 +1524,16 @@ function zanalyz() {
     async partagerPredictionsJour() {
       this.partageMsg = '';
       this.partageBusy = true;
-      const titre = 'ZanalyZ — Nos ZanalyZ · ' + fmtJour(this.jourDate + 'T12:00:00');
+      const titre = 'Zanalyze — Nos Zanalyze · ' + fmtJour(this.jourDate + 'T12:00:00');
       const text = [
         titre,
-        'Voici notre sélection du jour, tirée de notre moteur de prédiction ZanalyZ',
+        'Voici notre sélection du jour, tirée de notre moteur de prédiction Zanalyze',
         '',
         ...this.textePredictionsJour(),
       ].join('\n');
       try {
         if (navigator.share) {
-          await navigator.share({ title: 'Nos ZanalyZ', text });
+          await navigator.share({ title: 'Nos Zanalyze', text });
           this.partageMsg = 'Partage envoyé.';
           return;
         }

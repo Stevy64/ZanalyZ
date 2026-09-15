@@ -1,6 +1,6 @@
 {
-  "name": "ZanalyZ",
-  "short_name": "ZanalyZ",
+  "name": "Zanalyze",
+  "short_name": "Zanalyze",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "background_color": "#eef1f5",
   "theme_color": "#0b1728",
   "lang": "fr",
-  "description": "ZanalyZ. Chances réelles et cote juste.",
+  "description": "Zanalyze. Chances réelles et cote juste.",
   "categories": ["sports", "utilities"],
   "icons": [
     { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

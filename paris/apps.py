@@ -4,7 +4,7 @@ from django.apps import AppConfig
 class ParisConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'paris'
-    verbose_name = 'ZanalyZ'
+    verbose_name = 'Zanalyze'
 
     def ready(self):
         from django.contrib.auth import get_user_model

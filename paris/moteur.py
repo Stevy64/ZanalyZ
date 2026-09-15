@@ -1,5 +1,5 @@
 """
-Moteur de probabilités ZanalyZ — fonctions pures, sans Django.
+Moteur de probabilités (copie locale, fallback si Zanalyze Engine n’est pas appelé).
 
 Pipeline (v3.1)
 ---------------

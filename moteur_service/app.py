@@ -1,8 +1,7 @@
 """
-Microservice moteur ZanalyZ (stateless).
-
-Expose l’analyse / classement de journée sans Django ni base.
-Le worker et le web appellent ce service via ZANALYZ_MOTEUR_URL.
+Fallback FastAPI dans ce repo (Docker VPS).
+La source de vérité ingest+calcul est le git Zanalyze-Engine.
+Le worker / web peuvent l’appeler via ZANALYZ_MOTEUR_URL.
 """
 from __future__ import annotations
 
@@ -19,7 +18,7 @@ from paris.moteur import (
 )
 
 app = FastAPI(
-    title='ZanalyZ Moteur',
+    title='Zanalyze Moteur (local)',
     version=VERSION_MOTEUR,
     docs_url='/docs',
 )

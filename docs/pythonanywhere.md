@@ -1,68 +1,51 @@
-# Déployer ZanalyZ sur PythonAnywhere
+# Déployer Zanalyze sur PythonAnywhere
 
 Guide **pas à pas** (compte Beginner ou payant).  
 **Pas de Docker** sur PythonAnywhere — app WSGI classique.
 
-> **Pourquoi aucun match ?** Sur le free tier, la sync calendrier live est
-> souvent **bloquée** (egress whitelist). Solution : générer les données **en
-> local** (Docker / PC), les pousser sur Git, puis les **importer** sur PA.
+> **Pourquoi aucun match ?** Sur le free tier, SofaScore est **hors whitelist**.
+> La source de vérité est **[Zanalyze Engine](https://github.com/Stevy64/Zanalyze-Engine)**
+> (GitHub Actions ou Oracle Always Free). PA **importe** seulement le snapshot.
+
+Détail : [engine.md](engine.md).
 
 ---
 
-## Données matchs via Git (recommandé)
+## Données matchs via Zanalyze Engine (recommandé)
 
-### A. Sur ta machine (où la sync marche)
+### A. Moteur (Actions / VPS / PC)
 
-```bash
-# Docker
-make sync-dev
-make snapshot-export-dev
-# → exports/matchs.json
+Le workflow du repo engine commit `exports/matchs.json` toutes les ~2 h.
 
-# ou sans Docker
-python manage.py synchroniser_sofascore --pages 1 --calculer
-python manage.py exporter_snapshot --out exports/matchs.json --jours 21
-```
-
-Puis commit + push :
-
-```bash
-git add exports/matchs.json
-git commit -m "Refresh match snapshot for PythonAnywhere"
-git push
-```
-
-Le fichier contient matchs, cotes, analyses / tips déjà calculés.  
-L’UI PA n’a **pas besoin** de recalculer ni d’appeler d’API calendrier.
-
-### B. Sur PythonAnywhere
+### B. Sur PythonAnywhere (Scheduled task)
 
 ```bash
 cd ~/ZanalyZ
 source ~/.virtualenvs/zanalyz/bin/activate
-git pull
 set -a && source .env && set +a
-python manage.py importer_snapshot --source exports/matchs.json
+python manage.py importer_snapshot --url https://raw.githubusercontent.com/Stevy64/Zanalyze-Engine/main/exports/matchs.json
 ```
 
-Optionnel (si le snapshot n’a que les cotes, sans analyses) :
+`.env` PA :
 
 ```bash
-python manage.py importer_snapshot --source exports/matchs.json --recalculer
+ZANALYZ_SYNC_LIVE=0
+# Pas de ZANALYZ_MOTEUR_URL — analyses déjà dans le snapshot
+ZANALYZ_SNAPSHOT_URL=https://raw.githubusercontent.com/Stevy64/Zanalyze-Engine/main/exports/matchs.json
 ```
 
-Recharge la page Matchs (vide le cache navigateur si besoin).  
-Le filtre date doit correspondre à des matchs présents dans le snapshot  
-(`--jours 21` autour d’aujourd’hui couvre en général « Aujourd’hui »).
+`raw.githubusercontent.com` est en général autorisé sur PA.
+
+Recharge la page Matchs. Le filtre date doit correspondre au snapshot (`--jours 21` côté engine).
 
 ### Routine
 
 | Fréquence | Action |
 |-----------|--------|
-| Chez toi | `make sync-dev` → `make snapshot-export-dev` → commit/push |
-| Sur PA | `git pull` → `importer_snapshot` |
+| Engine (Actions) | sync SofaScore + analyses + push JSON |
+| PA | `importer_snapshot --url …` |
 
-Sans `ZANALYZ_MOTEUR_URL` sur PA : le moteur tourne **dans Django** si tu utilises `--recalculer`.
+Fallback manuel (PC) : `make sync-dev` puis `make snapshot-export-dev` dans **ce** repo.
 
 ---
 
@@ -104,7 +87,9 @@ DJANGO_ALLOWED_HOSTS=TONUSER.pythonanywhere.com
 DJANGO_CSRF_TRUSTED_ORIGINS=https://TONUSER.pythonanywhere.com
 DJANGO_SSL=1
 DJANGO_SECURE_SSL_REDIRECT=0
-# Pas de ZANALYZ_MOTEUR_URL
+ZANALYZ_SYNC_LIVE=0
+# Pas de ZANALYZ_MOTEUR_URL — analyses déjà dans le snapshot
+ZANALYZ_SNAPSHOT_URL=https://raw.githubusercontent.com/Stevy64/Zanalyze-Engine/main/exports/matchs.json
 ```
 
 ---
@@ -117,7 +102,7 @@ set -a && source .env && set +a
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 python manage.py createsuperuser   # si pas déjà fait
-python manage.py importer_snapshot --source exports/matchs.json
+python manage.py importer_snapshot --url "$ZANALYZ_SNAPSHOT_URL"
 ```
 
 Les **logos** sont des URLs CDN chargées par le **navigateur** (pas le serveur PA).  

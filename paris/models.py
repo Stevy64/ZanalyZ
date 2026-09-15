@@ -319,7 +319,7 @@ class ReglageSite(models.Model):
     )
     whatsapp_message = models.CharField(
         max_length=300, blank=True,
-        default='Bonjour, je souhaite devenir VIP sur ZanalyZ.',
+        default='Bonjour, je souhaite devenir VIP sur Zanalyze.',
         help_text='Message prérempli quand l’utilisateur ouvre WhatsApp.',
     )
     whatsapp_url = models.URLField(
@@ -327,7 +327,7 @@ class ReglageSite(models.Model):
         help_text='Lien WhatsApp complet (prioritaire si renseigné).',
     )
     vip_tarif_libelle = models.CharField(
-        max_length=120, blank=True, default='VIP ZanalyZ',
+        max_length=120, blank=True, default='VIP Zanalyze',
         help_text='Court libellé affiché sur le CTA (ex. « VIP — 4,99 € / mois »).',
     )
     updated_at = models.DateTimeField(auto_now=True)
@@ -337,7 +337,7 @@ class ReglageSite(models.Model):
         verbose_name_plural = 'Réglages site'
 
     def __str__(self):
-        return 'Réglages ZanalyZ'
+        return 'Réglages Zanalyze'
 
     def save(self, *args, **kwargs):
         self.pk = 1
@@ -363,7 +363,7 @@ class ReglageSite(models.Model):
             )
         if not phone:
             return ''
-        msg = (self.whatsapp_message or 'Bonjour, je souhaite devenir VIP sur ZanalyZ.').strip()
+        msg = (self.whatsapp_message or 'Bonjour, je souhaite devenir VIP sur Zanalyze.').strip()
         return f'https://wa.me/{phone}?text={quote(msg)}'
 
 

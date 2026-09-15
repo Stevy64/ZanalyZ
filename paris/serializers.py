@@ -6,7 +6,7 @@ from paris.models import (
 from paris.moteur import RESIDU_DOUTEUX
 
 NIVEAUX_LISTE = ('prudente', 'equilibree', 'audacieuse')
-# Nos ZanalyZ / historique : tips + recommandée + filet de sécurité
+# Nos Zanalyze / historique : tips + recommandée + filet de sécurité
 NIVEAUX_COMPOS = ('prudente', 'recommandee', 'equilibree', 'audacieuse', 'filet')
 
 

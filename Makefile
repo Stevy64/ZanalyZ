@@ -22,7 +22,7 @@ help:
 	@echo "  make snapshot-export-dev / snapshot-import-dev"
 	@echo "  make sync[-dev]     - pipeline manuel"
 	@echo "  make health / clean"
-	@echo "  Doc : docs/architecture.md / docs/pythonanywhere.md"
+	@echo "  Doc : docs/architecture.md / docs/pythonanywhere.md / docs/engine.md"
 
 # Wheels Linux pour build Docker (évite DNS/pip flaky dans le daemon)
 wheels:
