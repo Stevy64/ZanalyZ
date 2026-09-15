@@ -86,18 +86,24 @@
 }
 .topnav-logo {
   display: block;
-  height: auto;
+  width: 40px;
+  height: 40px;
+  max-width: 40px;
   max-height: 40px;
-  width: auto;
-  max-width: min(132px, 46vw);
-  object-fit: contain;
-  filter: drop-shadow(0 1px 8px rgba(40, 12, 0, 0.35));
+  object-fit: cover;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 8px rgba(40, 12, 0, 0.28);
+  filter: none;
 }
 .topnav-logo-mark {
   display: none;
+  width: 36px;
+  height: 36px;
   max-width: 36px;
   max-height: 36px;
-  border-radius: 8px;
+  border-radius: 50%;
 }
 .topnav-brand:active {
   transform: scale(0.97);
@@ -227,8 +233,6 @@
   }
 }
 @media (max-width: 360px) {
-  .topnav-logo-full { display: none; }
-  .topnav-logo-mark { display: block; }
   .topnav-brand {
     max-width: none;
   }
