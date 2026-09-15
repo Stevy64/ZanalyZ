@@ -281,6 +281,39 @@ function drapeauComp(comp, cls) {
   );
 }
 
+function drapeauPays(pays, cls) {
+  const key = FLAG_BY_PAYS[pays];
+  const body = key ? FLAG_SVG[key] : '';
+  if (!body) {
+    return '<span class="' + (cls || 'flag') + ' flag-empty" aria-hidden="true"></span>';
+  }
+  return (
+    '<svg class="' + (cls || 'flag') + '" viewBox="0 0 36 36" role="img" '
+    + 'aria-label="' + esc(pays) + '" focusable="false">' + body + '</svg>'
+  );
+}
+
+const ORDRE_PAYS_FILTRE = [
+  'Angleterre', 'Espagne', 'Allemagne', 'France', 'Italie', 'Portugal',
+];
+
+function parseFiltre(filtre) {
+  if (!filtre) return { mode: 'all' };
+  if (String(filtre).startsWith('pays:')) {
+    return { mode: 'pays', pays: filtre.slice(5) };
+  }
+  return { mode: 'comp', code: filtre };
+}
+
+function matchFiltreCompetition(m, filtre) {
+  const f = parseFiltre(filtre);
+  if (f.mode === 'all') return true;
+  if (!m || !m.competition) return false;
+  if (f.mode === 'comp') return m.competition.code === f.code;
+  if (f.mode === 'pays') return m.competition.pays === f.pays;
+  return true;
+}
+
 async function getJSON(url) {
   const res = await fetch(url, {
     headers: { Accept: 'application/json' },
@@ -364,6 +397,7 @@ function zanalyz() {
     crestSvg,
     icon,
     drapeauComp,
+    drapeauPays,
     fmtJour,
     TYPES_PROPOSITION,
     logoUrl(eq) {
@@ -869,8 +903,10 @@ function zanalyz() {
       this.matchs = [];
       const q = new URLSearchParams();
       q.set('statut', 'a_venir,en_cours');
-      q.set('page_size', '50');
-      if (filtreActif) q.set('competition', filtreActif);
+      const modeFiltre = parseFiltre(filtreActif).mode;
+      q.set('page_size', modeFiltre === 'pays' ? '120' : '50');
+      const apiComp = this.filtreApiCompetition();
+      if (apiComp) q.set('competition', apiComp);
       // Toujours borner à « aujourd’hui » minimum pour ne pas resservir d’anciens jours.
       const auj = this.dateAujourdhui();
       const depuis = this.filtreDate || auj;
@@ -882,7 +918,7 @@ function zanalyz() {
       let list = (data && data.results) || [];
       list = list.filter((m) => m.statut === 'a_venir' || m.statut === 'en_cours');
       if (filtreActif) {
-        list = list.filter((m) => m.competition && m.competition.code === filtreActif);
+        list = list.filter((m) => matchFiltreCompetition(m, filtreActif));
       }
       if (this.filtreDate) {
         list = list.filter((m) => dateLocaleISO(m.coup_denvoi) === this.filtreDate);
@@ -970,6 +1006,66 @@ function zanalyz() {
       localStorage.setItem(LS_FILTRE, this.filtre);
       this.matchs = [];
       this.chargerMatchs();
+    },
+
+    setFiltrePays(pays) {
+      const cle = 'pays:' + pays;
+      if (this.filtre === cle) this.setFiltre('');
+      else this.setFiltre(cle);
+    },
+
+    filtreApiCompetition() {
+      const f = parseFiltre(this.filtre);
+      return f.mode === 'comp' ? f.code : '';
+    },
+
+    filtrePaysSelectionne() {
+      const f = parseFiltre(this.filtre);
+      if (f.mode === 'pays') return f.pays;
+      if (f.mode === 'comp') {
+        const c = this.competitions.find((x) => x.code === f.code);
+        return (c && c.pays) || '';
+      }
+      return '';
+    },
+
+    isFiltrePaysActif(pays) {
+      return this.filtrePaysSelectionne() === pays;
+    },
+
+    get filtresPrincipaux() {
+      const comps = this.competitions || [];
+      const out = [];
+      const ucl = comps.find((c) => c.code === 'UCL');
+      if (ucl) out.push({ kind: 'ucl', comp: ucl });
+      const byPays = new Map();
+      for (const c of comps) {
+        if (c.code === 'UCL') continue;
+        const pays = c.pays || 'Autre';
+        if (!byPays.has(pays)) byPays.set(pays, []);
+        byPays.get(pays).push(c);
+      }
+      const sortedPays = [...byPays.keys()].sort((a, b) => {
+        const ia = ORDRE_PAYS_FILTRE.indexOf(a);
+        const ib = ORDRE_PAYS_FILTRE.indexOf(b);
+        if (ia >= 0 && ib >= 0) return ia - ib;
+        if (ia >= 0) return -1;
+        if (ib >= 0) return 1;
+        return String(a).localeCompare(String(b), 'fr');
+      });
+      for (const pays of sortedPays) {
+        const list = byPays.get(pays).slice().sort(
+          (a, b) => (Number(a.ordre) || 100) - (Number(b.ordre) || 100),
+        );
+        out.push({ kind: 'pays', pays, comps: list });
+      }
+      return out;
+    },
+
+    get sousFiltresComp() {
+      const pays = this.filtrePaysSelectionne();
+      if (!pays) return [];
+      return this.competitions.filter((c) => c.pays === pays);
     },
 
     setFiltreDate(val) {

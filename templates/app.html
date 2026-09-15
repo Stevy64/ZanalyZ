@@ -8,8 +8,9 @@
   <meta name="description" content="Zanalyze. Chances réelles, cote juste.">
   <title>Zanalyze</title>
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
-  <link rel="stylesheet" href="/static/css/app.css?v=77">
+  <link rel="icon" href="/static/icons/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch.png">
+  <link rel="stylesheet" href="/static/css/app.css?v=79">
 </head>
 <body
   x-data="zanalyz()"
@@ -21,8 +22,8 @@
 
   <nav class="topnav" :class="tabHidden ? 'topnav-hide' : ''" aria-label="Compte">
     <button type="button" class="topnav-brand" @click="allerAccueil()" aria-label="Zanalyze">
-      <span class="topnav-brand-full">Zanalyze</span>
-      <span class="topnav-brand-short" aria-hidden="true">ZYZ</span>
+      <img class="topnav-logo topnav-logo-full" src="/static/brand/zanalyze-logo-nav.png" alt="" width="120" height="40" decoding="async">
+      <img class="topnav-logo topnav-logo-mark" src="/static/icons/icon-192.png" alt="" width="36" height="36" decoding="async">
     </button>
     <div class="topnav-right">
       <button type="button" class="topnav-install" x-show="!installePWA" x-cloak
@@ -100,16 +101,35 @@
             :aria-selected="filtre === ''"
             :class="filtre === '' ? 'puce on' : 'puce'"
             @click="setFiltre('')">Tous</button>
-          <template x-for="c in competitions" :key="c.code">
+          <template x-for="bloc in filtresPrincipaux" :key="bloc.kind === 'ucl' ? 'UCL' : bloc.pays">
             <button type="button" role="tab" class="puce-comp"
+              :class="[
+                (bloc.kind === 'ucl' ? filtre === 'UCL' : isFiltrePaysActif(bloc.pays)) ? 'puce on' : 'puce',
+                bloc.kind === 'pays' ? 'puce-pays' : '',
+              ]"
+              :aria-selected="bloc.kind === 'ucl' ? filtre === 'UCL' : isFiltrePaysActif(bloc.pays)"
+              :aria-label="bloc.kind === 'ucl' ? bloc.comp.nom : (bloc.pays + ' — championnat et coupes')"
+              :title="bloc.kind === 'ucl' ? bloc.comp.nom : (bloc.pays + ' — championnat et coupes')"
+              @click="bloc.kind === 'ucl' ? setFiltre('UCL') : setFiltrePays(bloc.pays)">
+              <span class="flag-wrap" x-html="bloc.kind === 'ucl' ? drapeauComp(bloc.comp) : drapeauPays(bloc.pays)"></span>
+              <span x-show="bloc.kind === 'ucl'" x-text="bloc.comp.code"></span>
+            </button>
+          </template>
+        </div>
+        <div class="puces puce-sous-bar" role="tablist" aria-label="Compétitions du pays"
+          x-show="sousFiltresComp.length > 1" x-cloak>
+          <button type="button" role="tab" class="puce puce-sous"
+            :class="filtre === ('pays:' + filtrePaysSelectionne()) ? 'on' : ''"
+            :aria-selected="filtre === ('pays:' + filtrePaysSelectionne())"
+            @click="setFiltre('pays:' + filtrePaysSelectionne())">Tout</button>
+          <template x-for="c in sousFiltresComp" :key="c.code">
+            <button type="button" role="tab" class="puce puce-sous"
+              :class="filtre === c.code ? 'on' : ''"
               :aria-selected="filtre === c.code"
-              :class="filtre === c.code ? 'puce on' : 'puce'"
               :aria-label="c.nom"
               :title="c.nom"
-              @click="setFiltre(c.code)">
-              <span class="flag-wrap" x-html="drapeauComp(c)"></span>
-              <span x-text="c.code"></span>
-            </button>
+              @click="setFiltre(c.code)"
+              x-text="c.code"></button>
           </template>
         </div>
 
@@ -1510,7 +1530,7 @@
     </a>
   </nav>
 
-  <script defer src="/static/js/app.js?v=72"></script>
+  <script defer src="/static/js/app.js?v=79"></script>
   <script defer src="/static/vendor/alpine.min.js?v=60"></script>
 </body>
 </html>

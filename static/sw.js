@@ -1,12 +1,16 @@
-const CACHE = 'paris-v60';
+const CACHE = 'paris-v79';
 const PRECACHE = [
   '/manifest.webmanifest',
-  '/static/css/app.css?v=60',
-  '/static/js/app.js?v=60',
+  '/static/css/app.css?v=79',
+  '/static/js/app.js?v=79',
   '/static/vendor/alpine.min.js?v=60',
   '/static/img/hero-accueil.jpg',
+  '/static/brand/zanalyze-logo.png',
+  '/static/brand/zanalyze-logo-nav.png',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
+  '/static/icons/favicon-32.png',
+  '/static/icons/apple-touch.png',
 ];
 
 self.addEventListener('install', (event) => {

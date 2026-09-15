@@ -7,7 +7,7 @@
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#eef1f5",
-  "theme_color": "#0b1728",
+  "theme_color": "#e8631c",
   "lang": "fr",
   "description": "Zanalyze. Chances réelles et cote juste.",
   "categories": ["sports", "utilities"],

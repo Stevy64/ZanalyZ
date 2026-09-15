@@ -75,22 +75,30 @@
   background: transparent;
   color: #fff;
   font: inherit;
-  font-size: clamp(1rem, 4.5vw, 1.28rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
   cursor: pointer;
-  padding: 6px 2px;
-  text-shadow: 0 1px 10px rgba(80, 25, 0, 0.25);
-  transition: transform 0.2s var(--ease), text-shadow 0.2s var(--ease);
+  padding: 4px 2px;
+  transition: transform 0.2s var(--ease);
   flex: 0 1 auto;
   min-width: 0;
-  max-width: 46%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: 52%;
   text-align: left;
+  line-height: 0;
 }
-.topnav-brand-short { display: none; }
+.topnav-logo {
+  display: block;
+  height: auto;
+  max-height: 40px;
+  width: auto;
+  max-width: min(132px, 46vw);
+  object-fit: contain;
+  filter: drop-shadow(0 1px 8px rgba(40, 12, 0, 0.35));
+}
+.topnav-logo-mark {
+  display: none;
+  max-width: 36px;
+  max-height: 36px;
+  border-radius: 8px;
+}
 .topnav-brand:active {
   transform: scale(0.97);
 }
@@ -219,11 +227,10 @@
   }
 }
 @media (max-width: 360px) {
-  .topnav-brand-full { display: none; }
-  .topnav-brand-short { display: inline; }
+  .topnav-logo-full { display: none; }
+  .topnav-logo-mark { display: block; }
   .topnav-brand {
     max-width: none;
-    font-size: 1.1rem;
   }
   .topnav .topnav-account-label { display: none; }
   .topnav .topnav-account {
@@ -601,6 +608,24 @@ button { cursor: pointer; }
   align-items: center;
   gap: 8px;
   padding: 0 14px 0 10px;
+}
+.puce.puce-pays {
+  padding: 0 11px;
+  min-width: 40px;
+  justify-content: center;
+}
+.puce-sous-bar {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  padding-top: 0;
+  padding-bottom: 10px;
+  margin-top: -6px;
+}
+.puce.puce-sous {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 0.82rem;
+  font-weight: 650;
 }
 .flag-wrap {
   display: inline-flex;
