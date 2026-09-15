@@ -272,20 +272,18 @@ def importer_snapshot(data: dict[str, Any]) -> dict[str, int]:
         if coup is None:
             continue
 
-        match, _ = Match.objects.update_or_create(
-            sofascore_id=sid,
-            defaults={
-                'competition': competition,
-                'domicile': domicile,
-                'exterieur': exterieur,
-                'coup_denvoi': coup,
-                'journee': m.get('journee') or '',
-                'statut': m.get('statut') or 'a_venir',
-                'buts_dom': m.get('buts_dom'),
-                'buts_ext': m.get('buts_ext'),
-                'buts_dom_mt': m.get('buts_dom_mt'),
-                'buts_ext_mt': m.get('buts_ext_mt'),
-            },
+        match = _upsert_match(
+            sid=sid,
+            competition=competition,
+            domicile=domicile,
+            exterieur=exterieur,
+            coup=coup,
+            journee=m.get('journee') or '',
+            statut=m.get('statut') or 'a_venir',
+            buts_dom=m.get('buts_dom'),
+            buts_ext=m.get('buts_ext'),
+            buts_dom_mt=m.get('buts_dom_mt'),
+            buts_ext_mt=m.get('buts_ext_mt'),
         )
         stats['matchs'] += 1
 
@@ -357,3 +355,57 @@ def importer_snapshot(data: dict[str, Any]) -> dict[str, int]:
                 stats['options'] += 1
 
     return stats
+
+
+def _upsert_match(
+    *,
+    sid: int,
+    competition: Competition,
+    domicile: Equipe,
+    exterieur: Equipe,
+    coup,
+    journee: str,
+    statut: str,
+    buts_dom,
+    buts_ext,
+    buts_dom_mt,
+    buts_ext_mt,
+) -> Match:
+    """
+    Upsert match par sofascore_id, sinon par (domicile, exterieur, coup_d'envoi).
+    Évite le conflit unique legacy SofaScore → ESPN (même rencontre, autre id).
+    """
+    defaults = {
+        'competition': competition,
+        'domicile': domicile,
+        'exterieur': exterieur,
+        'coup_denvoi': coup,
+        'journee': journee,
+        'statut': statut,
+        'buts_dom': buts_dom,
+        'buts_ext': buts_ext,
+        'buts_dom_mt': buts_dom_mt,
+        'buts_ext_mt': buts_ext_mt,
+        'sofascore_id': sid,
+    }
+
+    match = Match.objects.filter(sofascore_id=sid).first()
+    if match is None:
+        match = Match.objects.filter(
+            domicile=domicile,
+            exterieur=exterieur,
+            coup_denvoi=coup,
+        ).first()
+
+    if match is None:
+        # Libère le sid s’il traîne sur un autre match (ne devrait pas arriver).
+        Match.objects.filter(sofascore_id=sid).update(sofascore_id=None)
+        return Match.objects.create(**defaults)
+
+    # Autre ligne avec ce sid → libérer
+    Match.objects.filter(sofascore_id=sid).exclude(pk=match.pk).update(sofascore_id=None)
+
+    for k, v in defaults.items():
+        setattr(match, k, v)
+    match.save()
+    return match

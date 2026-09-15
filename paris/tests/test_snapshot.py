@@ -1,5 +1,7 @@
 """Tests snapshot export / import."""
 
+from datetime import datetime, timezone as dt_timezone
+
 from django.test import TestCase
 from django.utils import timezone
 
@@ -108,3 +110,44 @@ class SnapshotRoundtripTests(TestCase):
         self.assertEqual(ars.nom, 'Arsenal')
         self.assertEqual(ars.sofascore_id, 359)
         self.assertFalse(Equipe.objects.filter(nom='Arsenal').exclude(pk=ars.pk).exists())
+
+    def test_import_reutilise_match_meme_fixture_autre_sid(self):
+        """Ancien match SofaScore (autre sid) → réutilisé pour l’id ESPN."""
+        Match.objects.all().delete()
+        ancien = Match.objects.create(
+            competition=self.comp,
+            domicile=self.dom,
+            exterieur=self.ext,
+            coup_denvoi=datetime(2026, 9, 20, 15, 0, tzinfo=dt_timezone.utc),
+            statut='a_venir',
+            sofascore_id=111111,
+        )
+        payload = {
+            'version': 1,
+            'competitions': [{
+                'code': 'PL', 'nom': 'Premier League', 'pays': 'Angleterre',
+                'ordre': 20, 'actif': True, 'sofascore_id': 700,
+            }],
+            'equipes': [
+                {'nom': 'Home FC', 'nom_court': 'Home', 'slug': 'home-fc',
+                 'sofascore_id': 1, 'logo_externe': '', 'fiche_club': {}},
+                {'nom': 'Away FC', 'nom_court': 'Away', 'slug': 'away-fc',
+                 'sofascore_id': 2, 'logo_externe': '', 'fiche_club': {}},
+            ],
+            'matchs': [{
+                'sofascore_id': 401888001,
+                'competition_code': 'PL',
+                'domicile_slug': 'home-fc',
+                'exterieur_slug': 'away-fc',
+                'coup_denvoi': '2026-09-20T15:00:00+00:00',
+                'statut': 'a_venir',
+                'cotes': [],
+                'analyse': None,
+            }],
+        }
+        stats = importer_snapshot(payload)
+        self.assertEqual(stats['matchs'], 1)
+        self.assertEqual(Match.objects.count(), 1)
+        m = Match.objects.get()
+        self.assertEqual(m.pk, ancien.pk)
+        self.assertEqual(m.sofascore_id, 401888001)
