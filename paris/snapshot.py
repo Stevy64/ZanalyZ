@@ -9,6 +9,7 @@ from django.db import transaction
 from django.utils.dateparse import parse_datetime
 
 from paris.models import Analyse, Competition, Contexte, Cote, Equipe, Match, Option
+from paris.reglement import regler_match
 
 SNAPSHOT_VERSION = 1
 
@@ -353,6 +354,9 @@ def importer_snapshot(data: dict[str, Any]) -> dict[str, int]:
                     resultat=o.get('resultat') or 'attente',
                 )
                 stats['options'] += 1
+
+        if match.statut == 'termine':
+            regler_match(match)
 
     return stats
 

@@ -820,12 +820,68 @@ function zanalyz() {
       if (!eq || !eq.id) return;
       this.clubEq = eq;
       this.sheetClub = true;
-      this.clubInfos = null;
+      this.clubInfos = {
+        equipe_id: eq.id,
+        nom: eq.nom || eq.nom_court || '',
+        nom_court: eq.nom_court || '',
+        forme: [],
+        recents: [],
+      };
       this.clubChargement = true;
       document.body.classList.add('sheet-open');
-      const { data, ok } = await getJSON('/api/v1/equipes/' + eq.id + '/infos/');
+      try {
+        const { data, ok } = await getJSON('/api/v1/equipes/' + eq.id + '/infos/');
+        if (ok && data) this.clubInfos = data;
+      } catch (_) { /* garde le squelette local */ }
       this.clubChargement = false;
-      if (ok) this.clubInfos = data;
+    },
+
+    sheetDragStart(ev) {
+      const t = ev.touches && ev.touches[0];
+      if (!t) return;
+      const sheet = ev.currentTarget && ev.currentTarget.closest
+        ? ev.currentTarget.closest('.bottom-sheet')
+        : null;
+      this._sheetDrag = { y0: t.clientY, dy: 0, sheet };
+    },
+
+    sheetDragMove(ev) {
+      if (!this._sheetDrag) return;
+      const t = ev.touches && ev.touches[0];
+      if (!t) return;
+      const dy = Math.max(0, t.clientY - this._sheetDrag.y0);
+      this._sheetDrag.dy = dy;
+      const el = this._sheetDrag.sheet;
+      if (el && dy > 0) {
+        el.style.transition = 'none';
+        el.style.transform = 'translateY(' + dy + 'px)';
+      }
+    },
+
+    sheetDragEnd() {
+      if (!this._sheetDrag) return;
+      const { dy, sheet } = this._sheetDrag;
+      this._sheetDrag = null;
+      if (sheet) {
+        sheet.style.transition = '';
+        sheet.style.transform = '';
+      }
+      if (dy > 72) this.fermerSheets();
+    },
+
+    estMatchPasse(m) {
+      if (!m) return false;
+      if (m.statut === 'termine') return true;
+      const auj = this.dateAujourdhui();
+      return dateLocaleISO(m.coup_denvoi) < auj;
+    },
+
+    libResultatTip(o) {
+      if (!o) return '';
+      if (o.resultat === 'gagne') return 'OK';
+      if (o.resultat === 'perdu') return 'KO';
+      if (o.resultat === 'annule') return 'Annulé';
+      return 'En attente';
     },
 
     optionsApercu(fiche) {
@@ -902,13 +958,14 @@ function zanalyz() {
       this.chargement = true;
       this.matchs = [];
       const q = new URLSearchParams();
-      q.set('statut', 'a_venir,en_cours');
+      const auj = this.dateAujourdhui();
+      const datePassee = !!(this.filtreDate && this.filtreDate < auj);
+      // Jour passé : afficher résultats + tips pour évaluer le moteur.
+      q.set('statut', datePassee ? 'termine,en_cours,a_venir,reporte' : 'a_venir,en_cours');
       const modeFiltre = parseFiltre(filtreActif).mode;
-      q.set('page_size', modeFiltre === 'pays' ? '120' : '50');
+      q.set('page_size', modeFiltre === 'pays' || datePassee ? '120' : '50');
       const apiComp = this.filtreApiCompetition();
       if (apiComp) q.set('competition', apiComp);
-      // Toujours borner à « aujourd’hui » minimum pour ne pas resservir d’anciens jours.
-      const auj = this.dateAujourdhui();
       const depuis = this.filtreDate || auj;
       q.set('depuis', depuis);
       if (this.filtreDate) q.set('jusqu_a', this.filtreDate);
@@ -916,15 +973,18 @@ function zanalyz() {
       if (token !== this._matchReq) return;
       this.noterCache(fromCache);
       let list = (data && data.results) || [];
-      list = list.filter((m) => m.statut === 'a_venir' || m.statut === 'en_cours');
       if (filtreActif) {
         list = list.filter((m) => matchFiltreCompetition(m, filtreActif));
       }
       if (this.filtreDate) {
         list = list.filter((m) => dateLocaleISO(m.coup_denvoi) === this.filtreDate);
       } else {
-        list = list.filter((m) => dateLocaleISO(m.coup_denvoi) >= auj);
+        list = list.filter((m) => {
+          if (!(m.statut === 'a_venir' || m.statut === 'en_cours')) return false;
+          return dateLocaleISO(m.coup_denvoi) >= auj;
+        });
       }
+      list.sort((a, b) => new Date(a.coup_denvoi) - new Date(b.coup_denvoi));
       this.matchs = list;
       this.chargement = false;
     },
@@ -1563,12 +1623,19 @@ function zanalyz() {
       const t = ev.touches && ev.touches[0];
       if (!t) return;
       const dy = this._composDragY - t.clientY;
+      this._composLastDy = -dy; // positif = tire vers le bas
       if (dy > 36) this.composExpanded = true;
       if (dy < -36) this.composExpanded = false;
     },
 
     composDragEnd() {
+      if (this._composDragY == null) return;
+      // Si on a baissé fort depuis le départ, fermer la feuille.
+      // (dy négatif stocké via _composLastDy)
+      const last = this._composLastDy || 0;
       this._composDragY = null;
+      this._composLastDy = null;
+      if (last < -90) this.fermerSheets();
     },
 
     async chargerPredictionsJour() {

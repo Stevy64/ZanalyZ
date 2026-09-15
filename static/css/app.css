@@ -3085,6 +3085,48 @@ button.compos-opt:active {
   margin: 10px auto 6px;
   flex-shrink: 0;
 }
+.sheet-handle.sheet-handle-drag {
+  width: 100%;
+  max-width: none;
+  height: 28px;
+  margin: 0;
+  padding: 12px 0 8px;
+  background: transparent;
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+}
+.sheet-handle.sheet-handle-drag::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto;
+  border-radius: 99px;
+  background: #d5d8e0;
+}
+.apercu-score {
+  margin: 8px 0 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--accent-deep, #0b1728);
+}
+.tag-score {
+  background: #0b1728 !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+.tag-bilan {
+  background: #e8edf5 !important;
+}
+.carte-passe-tips {
+  margin-top: 8px;
+}
+.opt-mini.bilan-gagne { border-color: #bbf7d0; background: #f0fdf4; }
+.opt-mini.bilan-perdu { border-color: #fecaca; background: #fef2f2; }
+.opt-mini.bilan-attente { border-color: #fde68a; background: #fffbeb; }
+
 .sheet-body {
   padding: 8px 16px 28px;
   overflow-y: auto;

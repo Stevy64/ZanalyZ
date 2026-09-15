@@ -10,7 +10,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/static/icons/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="/static/icons/apple-touch.png">
-  <link rel="stylesheet" href="/static/css/app.css?v=81">
+  <link rel="stylesheet" href="/static/css/app.css?v=82">
 </head>
 <body
   x-data="zanalyz()"
@@ -146,7 +146,12 @@
         </div>
         <p class="hint hint-logos">
           <span x-html="icon('info','icon icon-sm')"></span>
-          Touche un <strong>blason</strong> pour voir forme, classement et matchs récents.
+          <span x-show="!(filtreDate && filtreDate < dateAujourdhui())">
+            Touche un <strong>blason</strong> pour voir forme, classement et matchs récents.
+          </span>
+          <span x-show="filtreDate && filtreDate < dateAujourdhui()" x-cloak>
+            Jour passé : score final + tips pour évaluer le moteur. Touche une carte pour le détail.
+          </span>
         </p>
 
         <div class="loader-wrap" x-show="chargement" x-cloak>
@@ -196,10 +201,22 @@
                 <div class="tags">
                   <span class="tag"><span x-html="icon('trophy','icon icon-sm')"></span><span x-text="m.competition.code"></span></span>
                   <span class="tag"><span x-html="icon('calendar','icon icon-sm')"></span><span x-text="jourCourt(m.coup_denvoi)"></span></span>
-                  <span class="tag"><span x-html="icon('clock','icon icon-sm')"></span><span x-text="heure(m.coup_denvoi)"></span></span>
-                  <span class="tag" x-show="m.score" x-text="m.score"></span>
+                  <span class="tag" x-show="m.statut !== 'termine'"><span x-html="icon('clock','icon icon-sm')"></span><span x-text="heure(m.coup_denvoi)"></span></span>
+                  <span class="tag tag-score" x-show="m.score" x-cloak x-text="m.score"></span>
+                  <span class="tag tag-bilan" x-show="m.statut === 'termine'" x-cloak>Terminé</span>
                 </div>
-                <template x-if="prudente(m)">
+                <template x-if="m.statut === 'termine' && tipsHisto(m).length">
+                  <div class="passe-recos carte-passe-tips">
+                    <template x-for="o in tipsHisto(m)" :key="o.id || o.code">
+                      <div class="passe-reco" :class="'bilan-' + (o.resultat || 'attente')">
+                        <span class="bilan-niv" x-text="libNiveau(o.niveau)"></span>
+                        <span x-text="o.libelle"></span>
+                        <strong class="bilan-pill-sm" x-text="libResultatTip(o)"></strong>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+                <template x-if="m.statut !== 'termine' && prudente(m)">
                   <div class="carte-reco">
                     <div class="pct-stack">
                       <div class="pct-row">
@@ -218,7 +235,7 @@
                     </div>
                   </div>
                 </template>
-                <div class="carte-pied no-apercu">
+                <div class="carte-pied no-apercu" x-show="m.statut !== 'termine'">
                   <div class="carte-pied-left">
                     <template x-if="prudente(m) && peutVoter">
                       <div class="vote-row compact">
@@ -243,6 +260,11 @@
                   </div>
                   <button type="button" class="btn-voir" @click.stop="ouvrirMatch(m.id)">
                     Détails <span x-html="icon('arrow')"></span>
+                  </button>
+                </div>
+                <div class="carte-pied no-apercu" x-show="m.statut === 'termine'" x-cloak>
+                  <button type="button" class="btn-voir" @click.stop="ouvrirMatch(m.id)">
+                    Voir le bilan <span x-html="icon('arrow')"></span>
                   </button>
                 </div>
               </article>
@@ -913,7 +935,10 @@
   <div class="bottom-sheet sheet-install" :class="sheetInstall ? 'open' : ''"
     role="dialog" aria-modal="true" aria-label="Installer l’application"
     :aria-hidden="!sheetInstall">
-    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-handle sheet-handle-drag" aria-hidden="true"
+      @touchstart.passive="sheetDragStart($event)"
+      @touchmove.passive="sheetDragMove($event)"
+      @touchend="sheetDragEnd()"></div>
     <div class="sheet-body">
       <h2 class="sheet-title">Installer Zanalyze</h2>
       <p class="hint" x-text="installHint"></p>
@@ -1077,7 +1102,10 @@
   <div class="bottom-sheet sheet-justif" :class="(sheetJustif ? 'open ' : '') + ((justif && justif.niveau) ? ('niv-' + justif.niveau) : '')"
     role="dialog" aria-modal="true" aria-label="Justification du tip"
     :aria-hidden="!sheetJustif">
-    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-handle sheet-handle-drag" aria-hidden="true"
+      @touchstart.passive="sheetDragStart($event)"
+      @touchmove.passive="sheetDragMove($event)"
+      @touchend="sheetDragEnd()"></div>
     <div class="sheet-body justif-body" x-show="justif" x-cloak>
       <header class="justif-hero">
         <div class="justif-hero-top">
@@ -1126,7 +1154,10 @@
   <div class="bottom-sheet sheet-cgu" :class="sheetCgu ? 'open' : ''"
     role="dialog" aria-modal="true" aria-label="Conditions générales d’utilisation"
     :aria-hidden="!sheetCgu">
-    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-handle sheet-handle-drag" aria-hidden="true"
+      @touchstart.passive="sheetDragStart($event)"
+      @touchmove.passive="sheetDragMove($event)"
+      @touchend="sheetDragEnd()"></div>
     <div class="sheet-body cgu-body">
       <h2 class="sheet-title">Conditions générales d’utilisation</h2>
       <p class="cgu-meta">Dernière mise à jour : 11 septembre 2026</p>
@@ -1297,7 +1328,10 @@
   <div class="bottom-sheet" :class="sheetApercu ? 'open' : ''"
     role="dialog" aria-modal="true" aria-label="Aperçu du match"
     :aria-hidden="!sheetApercu">
-    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-handle sheet-handle-drag" aria-hidden="true"
+      @touchstart.passive="sheetDragStart($event)"
+      @touchmove.passive="sheetDragMove($event)"
+      @touchend="sheetDragEnd()"></div>
     <div class="loader-wrap" x-show="apercuChargement" x-cloak>
       <div class="spinner" role="status" aria-label="Chargement"></div>
     </div>
@@ -1314,6 +1348,8 @@
           <div>
             <strong x-text="apercu.domicile.nom_court + ' – ' + apercu.exterieur.nom_court"></strong>
             <p x-text="apercu.competition.nom + ' · ' + dateHeure(apercu.coup_denvoi)"></p>
+            <p class="apercu-score" x-show="apercu.score" x-cloak x-text="apercu.score"></p>
+            <p class="hint" x-show="apercu.statut === 'termine'" x-cloak>Match terminé — bilan des tips</p>
           </div>
           <button type="button" class="crest-btn" @click="ouvrirClub(apercu.exterieur, $event)"
             :aria-label="'Forme et classement de ' + apercu.exterieur.nom_court"
@@ -1326,22 +1362,28 @@
           <p class="hint">Pas encore d’analyse pour ce match.</p>
         </template>
         <template x-for="o in optionsApercu(apercu)" :key="o.code">
-          <div :class="'opt-mini opt-' + o.niveau">
+          <div :class="'opt-mini opt-' + o.niveau + (apercu.statut === 'termine' ? (' bilan-' + (o.resultat || 'attente')) : '')">
             <div class="opt-top">
               <span class="opt-niv" x-text="libNiveau(o.niveau)"></span>
               <div class="pct-stack right">
-                <strong x-text="fmtPct(o.probabilite)"></strong>
-                <span class="opt-cons" x-text="'Consensus ' + fmtConsensus(o)"></span>
+                <strong x-show="apercu.statut !== 'termine'" x-text="fmtPct(o.probabilite)"></strong>
+                <strong class="bilan-pill-sm" x-show="apercu.statut === 'termine'" x-cloak
+                  x-text="libResultatTip(o)"></strong>
+                <span class="opt-cons" x-show="apercu.statut !== 'termine'"
+                  x-text="'Consensus ' + fmtConsensus(o)"></span>
+                <span class="opt-cons" x-show="apercu.statut === 'termine'" x-cloak
+                  x-text="fmtPct(o.probabilite) + ' annoncé'"></span>
               </div>
             </div>
             <p x-text="o.libelle"></p>
-            <div class="jauge" :class="toneProb(o.probabilite)">
+            <div class="jauge" :class="toneProb(o.probabilite)" x-show="apercu.statut !== 'termine'">
               <i :style="'width:' + sur100(o.probabilite) + '%'"></i>
             </div>
           </div>
         </template>
         <button type="button" class="btn btn-block"
-          @click="ouvrirMatch(apercu.id)">Voir tous les détails</button>
+          @click="ouvrirMatch(apercu.id)"
+          x-text="apercu.statut === 'termine' ? 'Voir le bilan complet' : 'Voir tous les détails'"></button>
         <button type="button" class="btn btn-ghost btn-block" @click="fermerSheets()">Fermer</button>
       </div>
     </template>
@@ -1350,7 +1392,10 @@
   <div class="bottom-sheet sheet-club" :class="sheetClub ? 'open' : ''"
     role="dialog" aria-modal="true" aria-label="Fiche club"
     :aria-hidden="!sheetClub">
-    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-handle sheet-handle-drag" aria-hidden="true"
+      @touchstart.passive="sheetDragStart($event)"
+      @touchmove.passive="sheetDragMove($event)"
+      @touchend="sheetDragEnd()"></div>
     <div class="loader-wrap" x-show="clubChargement" x-cloak>
       <div class="spinner" role="status" aria-label="Chargement"></div>
       <p>Infos club…</p>
@@ -1392,7 +1437,9 @@
             </li>
           </template>
         </ul>
-        <p class="vide vide-sm" x-show="!(clubInfos.recents||[]).length">Aucun match récent.</p>
+        <p class="vide vide-sm" x-show="!(clubInfos.recents||[]).length">
+          Aucun match terminé en base pour ce club (normal juste après import ESPN).
+        </p>
         <button type="button" class="btn btn-ghost btn-block" @click="fermerSheets()">Fermer</button>
       </div>
     </template>
@@ -1402,7 +1449,10 @@
   <div class="bottom-sheet sheet-vip" :class="sheetVip ? 'open' : ''"
     role="dialog" aria-modal="true" aria-label="Devenir VIP"
     :aria-hidden="!sheetVip">
-    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-handle sheet-handle-drag" aria-hidden="true"
+      @touchstart.passive="sheetDragStart($event)"
+      @touchmove.passive="sheetDragMove($event)"
+      @touchend="sheetDragEnd()"></div>
     <div class="sheet-body vip-sheet-body">
       <div class="vip-sheet-hero">
         <span class="vip-sheet-ico" x-html="icon('crown','icon icon-lg')"></span>
@@ -1439,7 +1489,10 @@
   <div class="bottom-sheet sheet-auth" :class="sheetAuth ? 'open' : ''"
     role="dialog" aria-modal="true" aria-label="Connexion"
     :aria-hidden="!sheetAuth">
-    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-handle sheet-handle-drag" aria-hidden="true"
+      @touchstart.passive="sheetDragStart($event)"
+      @touchmove.passive="sheetDragMove($event)"
+      @touchend="sheetDragEnd()"></div>
     <div class="sheet-body auth-sheet-body">
       <div class="auth-sheet-head">
         <span class="panel-ico auth-sheet-ico" x-html="icon('users')"></span>
@@ -1530,7 +1583,7 @@
     </a>
   </nav>
 
-  <script defer src="/static/js/app.js?v=81"></script>
+  <script defer src="/static/js/app.js?v=82"></script>
   <script defer src="/static/vendor/alpine.min.js?v=60"></script>
 </body>
 </html>

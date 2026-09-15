@@ -624,9 +624,11 @@ class EquipeInfos(APIView):
     cache_seconds = 600
 
     def get(self, request, pk):
+        from django.conf import settings
         from paris import thesportsdb as tsdb
 
         eq = get_object_or_404(Equipe, pk=pk)
+        local = _infos_equipe_locale(eq)
         data = None
         cached = dict(eq.fiche_club or {})
         # Sur hébergeurs sans egress : servir d’abord la fiche embarquée au snapshot.
@@ -640,28 +642,32 @@ class EquipeInfos(APIView):
             .first()
         )
         league_code = m.competition.code if m and m.competition_id else None
+        sync_live = str(getattr(settings, 'ZANALYZ_SYNC_LIVE', '1')).lower() in (
+            '1', 'true', 'yes', 'on',
+        )
 
-        # Tentative live (échoue souvent hors whitelist — on garde le cache).
+        # Tentative live — jamais bloquante. Sur PA (SYNC_LIVE=0) on évite SofaScore
+        # car sofascore_id contient souvent des ids ESPN incompatibles.
         live = None
-        sid = _sid_equipe(eq)
-        if sid:
-            tid = None
-            if m and m.competition.sofascore_id:
-                tid = m.competition.sofascore_id
-            try:
-                live = sofa.infos_equipe(sid, tournament_id=tid)
-            except sofa.SofaScoreErreur:
-                live = None
-        if live is None:
-            tsid = _tsdb_id(eq)
-            if tsid:
+        if sync_live:
+            sid = _sid_equipe(eq)
+            if sid:
+                tid = None
+                if m and m.competition.sofascore_id:
+                    tid = m.competition.sofascore_id
                 try:
-                    live = tsdb.infos_equipe(tsid, league_code=league_code)
-                except tsdb.SportsDbErreur:
+                    live = sofa.infos_equipe(sid, tournament_id=tid)
+                except Exception:  # noqa: BLE001 — timeout / 403 / id ESPN
                     live = None
+        if live is None:
+            try:
+                tsid = _tsdb_id(eq)
+                if tsid:
+                    live = tsdb.infos_equipe(tsid, league_code=league_code)
+            except Exception:  # noqa: BLE001
+                live = None
         if live is not None:
             data = live
-            # Rafraîchit le cache pour les prochains appels hors-ligne.
             fiche = {
                 k: live.get(k) for k in (
                     'nom', 'nom_court', 'pays', 'forme', 'position',
@@ -677,9 +683,11 @@ class EquipeInfos(APIView):
             if badge and not eq.logo_externe:
                 eq.logo_externe = badge
                 updates.append('logo_externe')
-            eq.save(update_fields=updates)
+            try:
+                eq.save(update_fields=updates)
+            except Exception:  # noqa: BLE001
+                pass
 
-        local = _infos_equipe_locale(eq)
         if data is None:
             data = local
         else:
@@ -694,8 +702,11 @@ class EquipeInfos(APIView):
         data.pop('source', None)
         data.pop('badge_url', None)
         data['equipe_id'] = eq.id
-        data['nom_court'] = eq.nom_court or data.get('nom_court')
-        data['nom'] = eq.nom or data.get('nom')
+        data['nom_court'] = eq.nom_court or data.get('nom_court') or ''
+        data['nom'] = eq.nom or data.get('nom') or ''
+        data.setdefault('forme', [])
+        data.setdefault('recents', [])
+        data.setdefault('pays', local.get('pays'))
         return Response(data)
 
 
